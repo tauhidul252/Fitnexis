@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section id="home" class="hero" style="background-image: linear-gradient(rgba(15, 15, 17, 0.7), rgba(15, 15, 17, 0.9)), url('{% static 'images/hero_banner.png' %}');">
+    <div class="hero-content">
+        <h1>Transform Your Body.<br>Elevate Your <span class="highlight">Life.</span></h1>
+        <p>Join Fitnexis today and get access to world-class facilities and elite trainers.</p>
+        <a href="#classes" class="btn-primary large">Explore Classes</a>
+    </div>
+</section>
+
+<section id="about" class="about">
+    <div class="about-grid">
+        <div class="about-text">
+            <h2>About <span class="highlight">Us</span></h2>
+            <p>Fitnexis is more than just a gym. We are a community dedicated to helping you achieve your ultimate fitness goals. Whether you are a beginner or a pro athlete, our state-of-the-art facility has everything you need.</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <h3>50+</h3>
+                    <p>Equipment</p>
+                </div>
+                <div class="stat-item">
+                    <h3>20+</h3>
+                    <p>Expert Trainers</p>
+                </div>
+                <div class="stat-item">
+                    <h3>24/7</h3>
+                    <p>Access</p>
+                </div>
+            </div>
+        </div>
+        <div class="about-image">
+            <div class="glow-box" style="width: 100%; height: 300px; background: linear-gradient(45deg, var(--accent), #ff5e00); border-radius: 8px; opacity: 0.8;"></div>
+        </div>
+    </div>
+</section>
+
+<section id="classes" class="classes">
+    <h2>Classes We <span class="highlight">Provide</span></h2>
+    <div class="class-grid">
+        <div class="class-card">
+            <div class="card-img" style="background-image: url('{% static 'images/class_crossfit.png' %}');"></div>
+            <div class="card-info">
+                <h3>CrossFit Training</h3>
+                <p>High-intensity functional movements to build strength and conditioning.</p>
+            </div>
+        </div>
+        <div class="class-card">
+            <div class="card-img" style="background: #2a2a2e;"></div>
+            <div class="card-info">
+                <h3>Bodybuilding</h3>
+                <p>Targeted muscle isolation workouts with premium free weights.</p>
+            </div>
+        </div>
+        <div class="class-card">
+            <div class="card-img" style="background: #2a2a2e;"></div>
+            <div class="card-info">
+                <h3>Cardio Burn</h3>
+                <p>Maximize calorie burn with our advanced treadmill and cycling sessions.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="instructors" class="instructors">
+    <h2>Our <span class="highlight">Instructors</span></h2>
+    <div class="instructor-grid">
+        <div class="instructor-card">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Instructor">
+            <div class="instructor-info">
+                <h3>Alex Mercer</h3>
+                <p>Head Coach</p>
+            </div>
+        </div>
+        <div class="instructor-card">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Instructor" style="filter: grayscale(0.5);">
+            <div class="instructor-info">
+                <h3>Sarah Jones</h3>
+                <p>Yoga Specialist</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
