@@ -2,83 +2,223 @@
 {% load static %}
 
 {% block content %}
-<section id="home" class="hero" style="background-image: linear-gradient(rgba(15, 15, 17, 0.7), rgba(15, 15, 17, 0.9)), url('{% static 'images/hero_banner.png' %}');">
+<!-- Hero Section -->
+<section id="home" class="hero" style="background-image: linear-gradient(rgba(15, 15, 17, 0.4), rgba(15, 15, 17, 0.7)), url('{% static 'images/hero_banner.png' %}');">
     <div class="hero-content">
-        <h1>Transform Your Body.<br>Elevate Your <span class="highlight">Life.</span></h1>
-        <p>Join Fitnexis today and get access to world-class facilities and elite trainers.</p>
-        <a href="#classes" class="btn-primary large">Explore Classes</a>
+        <p class="hero-small-yellow">YOUR BODY DESERVES BEST</p>
+        <h1 class="hero-title">Personalized Wellness for<br>Real Results</h1>
+        <a href="#about" class="btn-primary">Read More &rarr;</a>
+    </div>
+    <div class="hero-arrow-right">
+        <span>&gt;</span>
     </div>
 </section>
 
-<section id="about" class="about">
+<!-- About Us (White) -->
+<section id="about" class="about section-white">
     <div class="about-grid">
         <div class="about-text">
-            <h2>About <span class="highlight">Us</span></h2>
-            <p>Fitnexis is more than just a gym. We are a community dedicated to helping you achieve your ultimate fitness goals. Whether you are a beginner or a pro athlete, our state-of-the-art facility has everything you need.</p>
-            <div class="stats">
-                <div class="stat-item">
-                    <h3>50+</h3>
-                    <p>Equipment</p>
-                </div>
-                <div class="stat-item">
-                    <h3>20+</h3>
-                    <p>Expert Trainers</p>
-                </div>
-                <div class="stat-item">
-                    <h3>24/7</h3>
-                    <p>Access</p>
-                </div>
-            </div>
+            <h2><span class="highlight">ABOUT</span> US</h2>
+            <p>The gym is very important for maintaining our health. It helps us build strong, active, and healthy bodies. Regular exercise builds immunity.</p>
+            <a href="#" class="btn-primary" style="margin-top: 1.5rem;">Read More &rarr;</a>
         </div>
-        <div class="about-image">
-            <div class="glow-box" style="width: 100%; height: 300px; background: linear-gradient(45deg, var(--accent), #ff5e00); border-radius: 8px; opacity: 0.8;"></div>
+        <div class="about-image-wrapper">
+            <img src="{% static 'images/instructor_1.png' %}" alt="About Us" class="about-img">
+            <div class="play-button">
+                <div class="play-icon">▶</div>
+                <p>PLAY VIDEO</p>
+            </div>
         </div>
     </div>
 </section>
 
-<section id="classes" class="classes">
-    <h2>Classes We <span class="highlight">Provide</span></h2>
+<!-- Our Classes Specific (Dark) -->
+<section class="specific-classes section-dark">
+    <div class="specific-grid">
+        <div class="circular-image">
+            <img src="{% static 'images/class_crossfit.png' %}" alt="Classes">
+        </div>
+        <div class="specific-text">
+            <h2><span class="highlight">OUR</span> CLASSES</h2>
+            <h3 class="subtitle-outline">SPECIFIC CLASSES<br>WHAT YOU NEEDS</h3>
+            <p>The gym is very important for maintaining our health. It helps us to build strong, active, and healthy muscles. Regular exercise helps us stay fit and strong. Training your body brings more discipline and positive perspective in life.</p>
+            <a href="#" class="link-yellow">SEE ALL CLASSES &rarr;</a>
+        </div>
+    </div>
+</section>
+
+<!-- Classes We Provide (Dark) -->
+<section id="classes" class="classes section-dark">
+    <div class="section-header-center">
+        <h2><span class="highlight">CLASSES</span> WE PROVIDE</h2>
+        <p class="header-desc">The classes you take provide value to your fitness and well being. Taking these classes regularly will help you in your daily life, reducing stress and promoting a healthy lifestyle.</p>
+    </div>
     <div class="class-grid">
         <div class="class-card">
-            <div class="card-img" style="background-image: url('{% static 'images/class_crossfit.png' %}');"></div>
-            <div class="card-info">
-                <h3>CrossFit Training</h3>
-                <p>High-intensity functional movements to build strength and conditioning.</p>
+            <img src="{% static 'images/hero_banner.png' %}" class="card-img" alt="Body Building">
+            <div class="card-content">
+                <h3 class="highlight">BODY BUILDING CLASS</h3>
+                <p>David Smith</p>
+                <div class="card-bottom-line"></div>
             </div>
         </div>
         <div class="class-card">
-            <div class="card-img" style="background: #2a2a2e;"></div>
-            <div class="card-info">
-                <h3>Bodybuilding</h3>
-                <p>Targeted muscle isolation workouts with premium free weights.</p>
+            <img src="{% static 'images/class_crossfit.png' %}" class="card-img" alt="Cardio">
+            <div class="card-content">
+                <h3 class="highlight">CARDIO CLASS</h3>
+                <p>David Smith</p>
+                <div class="card-bottom-line"></div>
             </div>
         </div>
         <div class="class-card">
-            <div class="card-img" style="background: #2a2a2e;"></div>
-            <div class="card-info">
-                <h3>Cardio Burn</h3>
-                <p>Maximize calorie burn with our advanced treadmill and cycling sessions.</p>
+            <img src="{% static 'images/instructor_1.png' %}" class="card-img" alt="Weight Lifting">
+            <div class="card-content">
+                <h3 class="highlight">WEIGHT LIFTER CLASS</h3>
+                <p>David Smith</p>
+                <div class="card-bottom-line"></div>
+            </div>
+        </div>
+    </div>
+    <div class="pagination">
+        <span>1</span> <span>/</span> <span class="active">2</span> <span>3</span> <span>&gt;</span>
+    </div>
+</section>
+
+<!-- Class Schedule (Dark) -->
+<section id="schedule" class="schedule section-dark">
+    <div class="section-header-center">
+        <h2><span class="highlight">CLASS</span> SCHEDULE</h2>
+        <p class="header-desc">The gym is very important for maintaining our health. It helps us build strong, active, and healthy muscles. The gym environment allows you to enjoy the benefits of a healthy lifestyle.</p>
+    </div>
+    <div class="schedule-table">
+        <div class="table-header">
+            <div>DAY</div>
+            <div>TIME</div>
+            <div>TRAINER</div>
+        </div>
+        <div class="table-row">
+            <div>SUNDAY</div>
+            <div>08:00AM - 10:00AM</div>
+            <div>DAVID</div>
+        </div>
+        <div class="table-row">
+            <div>MONDAY</div>
+            <div>08:00AM - 10:00AM</div>
+            <div>JOHN</div>
+        </div>
+        <div class="table-row">
+            <div>TUESDAY</div>
+            <div>08:00AM - 10:00AM</div>
+            <div>JACK</div>
+        </div>
+        <div class="table-row">
+            <div>WEDNESDAY</div>
+            <div>08:00AM - 10:00AM</div>
+            <div>MICHAEL</div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Instructors (White) -->
+<section id="instructors" class="instructors section-white">
+    <div class="section-header-center">
+        <h2><span class="highlight">OUR</span> INSTRUCTORS</h2>
+        <p class="header-desc" style="color:var(--text-dark);">Professional and certified trainers who are highly skilled in fitness and training.</p>
+    </div>
+    <div class="instructor-grid">
+        <div class="instructor-card-dark">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
+            <div class="trainer-info">
+                <h3>Tony</h3>
+                <p>Pro Trainer</p>
+                <a href="#" class="btn-primary outline">VIEW PROFILE</a>
+            </div>
+        </div>
+        <div class="instructor-card-dark">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
+            <div class="trainer-info">
+                <h3>Mike</h3>
+                <p>Pro Trainer</p>
+                <a href="#" class="btn-primary outline">VIEW PROFILE</a>
+            </div>
+        </div>
+        <div class="instructor-card-dark">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
+            <div class="trainer-info">
+                <h3>John</h3>
+                <p>Pro Trainer</p>
+                <a href="#" class="btn-primary outline">VIEW PROFILE</a>
             </div>
         </div>
     </div>
 </section>
 
-<section id="instructors" class="instructors">
-    <h2>Our <span class="highlight">Instructors</span></h2>
-    <div class="instructor-grid">
-        <div class="instructor-card">
-            <img src="{% static 'images/instructor_1.png' %}" alt="Instructor">
-            <div class="instructor-info">
-                <h3>Alex Mercer</h3>
-                <p>Head Coach</p>
+<!-- Our Blogs (Dark) -->
+<section id="blogs" class="blogs section-dark">
+    <div class="section-header-center">
+        <h2><span class="highlight">OUR</span> BLOGS</h2>
+        <p class="header-desc">We have blogs dedicated to physical and mental well-being to help you stay motivated on your health journey.</p>
+    </div>
+    <div class="blog-grid">
+        <div class="blog-card">
+            <img src="{% static 'images/hero_banner.png' %}" alt="Blog 1">
+            <div class="blog-info">
+                <h3>How to Build Muscle Fast</h3>
+                <p>12 Jan 2026 | By Admin</p>
             </div>
         </div>
-        <div class="instructor-card">
-            <img src="{% static 'images/instructor_1.png' %}" alt="Instructor" style="filter: grayscale(0.5);">
-            <div class="instructor-info">
-                <h3>Sarah Jones</h3>
-                <p>Yoga Specialist</p>
+        <div class="blog-card">
+            <img src="{% static 'images/class_crossfit.png' %}" alt="Blog 2">
+            <div class="blog-info">
+                <h3>Benefits of Daily Cardio</h3>
+                <p>10 Jan 2026 | By Admin</p>
             </div>
+        </div>
+        <div class="blog-card">
+            <img src="{% static 'images/instructor_1.png' %}" alt="Blog 3">
+            <div class="blog-info">
+                <h3>Proper Weightlifting Form</h3>
+                <p>05 Jan 2026 | By Admin</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Us (White) -->
+<section id="contact" class="contact section-white">
+    <div class="section-header-center">
+        <h2><span class="highlight">CONTACT</span> US</h2>
+        <p class="header-desc" style="color:var(--text-dark);">For business collaboration and inquiries please leave us a message and our team will get back to you to discuss your health and fitness.</p>
+    </div>
+    
+    <div class="contact-info-row">
+        <div class="contact-icon-box">
+            <div class="icon-circle">📍</div>
+            <p>123, Central Street, Main Road<br>Dhaka, Bangladesh</p>
+        </div>
+        <div class="contact-icon-box">
+            <div class="icon-circle">📞</div>
+            <p>(+88) 01234 56789<br>(+88) 98765 43210</p>
+        </div>
+        <div class="contact-icon-box">
+            <div class="icon-circle">✉</div>
+            <p>info@fitnexis.com<br>support@fitnexis.com</p>
+        </div>
+    </div>
+
+    <div class="contact-main-grid">
+        <div class="contact-form-box">
+            <form>
+                <div class="form-row">
+                    <input type="text" placeholder="Name" required>
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <textarea placeholder="Write message here..." rows="6" required></textarea>
+                <button type="submit" class="btn-primary full-width">SEND MESSAGE</button>
+            </form>
+        </div>
+        <div class="contact-map-box">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.902442430139!2d90.3897482154316!3d23.750858094676575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8a36c84c7e5%3A0xc3b83c74900a068e!2sDhaka!5e0!3m2!1sen!2sbd!4v1655183861214!5m2!1sen!2sbd" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
         </div>
     </div>
 </section>

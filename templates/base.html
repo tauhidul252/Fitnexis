@@ -4,41 +4,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitnexis | Premium Gym</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <title>FITNEXIS GYM CLUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">FITNEXIS</div>
+        <div class="logo-container">
+            <h1 class="logo-text">FITNEXIS</h1>
+            <p class="logo-subtext">G Y M &nbsp;&nbsp; C L U B</p>
+        </div>
         <ul class="nav-links">
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="#classes">Classes</a></li>
-            <li><a href="#instructors">Instructors</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="{% url 'home' %}">HOME</a></li>
+            <li><a href="#about">ABOUT</a></li>
+            <li><a href="#classes">CLASSES</a></li>
+            <li><a href="#schedule">SCHEDULE</a></li>
+            <li><a href="#blogs">BLOG</a></li>
+            <li><a href="#contact">CONTACT</a></li>
         </ul>
         <div class="nav-actions">
-            <a href="#" class="btn-primary">Join Now</a>
+            <a href="#" class="btn-outline">LOGIN</a>
+            <a href="#" class="btn-primary">SIGN UP</a>
         </div>
     </nav>
     <main>
         {% block content %}{% endblock %}
     </main>
     <footer>
-        <div class="footer-content">
-            <div class="footer-brand">
-                <h2>FITNEXIS</h2>
-                <p>Empowering your fitness journey with premium equipment and elite trainers.</p>
+        <div class="footer-container">
+            <div class="footer-col brand-col">
+                <h1 class="logo-text" style="color: white; margin-bottom:0;">FITNEXIS</h1>
+                <p class="logo-subtext" style="color: var(--text-muted); margin-bottom: 1rem;">G Y M &nbsp;&nbsp; C L U B</p>
+                <div class="social-icons">
+                    <span class="icon">IG</span>
+                    <span class="icon">FB</span>
+                    <span class="icon">TW</span>
+                </div>
             </div>
-            <div class="footer-links">
-                <h3>Quick Links</h3>
-                <a href="#home">Home</a>
-                <a href="#classes">Classes</a>
-                <a href="#instructors">Instructors</a>
+            <div class="footer-col">
+                <h3>About Us</h3>
+                <a href="#">Company Profile</a>
+                <a href="#">Our Management</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-col">
+                <h3>Useful Links</h3>
+                <a href="#">Blogs</a>
+                <a href="#">Class Schedule</a>
+                <a href="#">Testimonial</a>
+                <a href="#">Payment Methods</a>
+            </div>
+            <div class="footer-col">
+                <h3>Support</h3>
+                <a href="#">Contact Us</a>
+                <a href="#">Support Center</a>
+                <a href="#">FAQ</a>
             </div>
         </div>
-        <div class="footer-bottom" id="contact">
-            <p>&copy; 2026 Fitnexis. All rights reserved.</p>
+        <div class="footer-newsletter">
+            <form class="newsletter-form">
+                <input type="email" placeholder="EMAIL HERE">
+                <button type="submit" class="btn-primary">SEND</button>
+            </form>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; All rights reserved | 2026</p>
         </div>
     </footer>
 </body>
