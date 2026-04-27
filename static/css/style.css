@@ -171,3 +171,72 @@ footer { background: #000; padding: 4rem 10% 0; }
     .contact-info-row { flex-direction: column; gap: 2rem; }
     .circular-image { width: 300px; height: 300px; }
 }
+
+/* Auth Pages */
+.auth-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 0.9)), url('../images/hero_banner.png');
+    background-size: cover;
+    background-position: center;
+    padding: 100px 5%;
+}
+
+.auth-card {
+    background: var(--bg-dark-secondary);
+    padding: 3rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid #333;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.auth-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="password"],
+.auth-form input[type="email"] {
+    width: 100%;
+    padding: 1rem;
+    background: var(--bg-dark);
+    border: 1px solid #333;
+    color: var(--text-white);
+    border-radius: 4px;
+    font-family: var(--font-body);
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.forgot-link:hover {
+    color: var(--accent);
+}
+
+.auth-footer {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
