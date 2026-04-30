@@ -10,10 +10,10 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo-container">
+        <a href="{% url 'home' %}" class="logo-container">
             <h1 class="logo-text">FITNEXIS</h1>
             <p class="logo-subtext">G Y M &nbsp;&nbsp; C L U B</p>
-        </div>
+        </a>
         <ul class="nav-links">
             <li><a href="{% url 'home' %}">HOME</a></li>
             <li><a href="#about">ABOUT</a></li>
@@ -27,7 +27,7 @@
         </ul>
         <div class="nav-actions">
             {% if user.is_authenticated %}
-            <form action="{% url 'admin:logout' %}" method="post" style="display: inline;">
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn-outline">LOGOUT</button>
             </form>
@@ -43,8 +43,10 @@
     <footer>
         <div class="footer-container">
             <div class="footer-col brand-col">
-                <h1 class="logo-text" style="color: white; margin-bottom:0;">FITNEXIS</h1>
-                <p class="logo-subtext" style="color: var(--text-muted); margin-bottom: 1rem;">G Y M &nbsp;&nbsp; C L U B</p>
+                <a href="{% url 'home' %}" style="text-decoration: none; display: block; margin-bottom: 1rem;">
+                    <h1 class="logo-text" style="color: white; margin-bottom:0;">FITNEXIS</h1>
+                    <p class="logo-subtext" style="color: var(--text-muted); margin-bottom: 0;">G Y M &nbsp;&nbsp; C L U B</p>
+                </a>
                 <div class="social-icons">
                     <span class="icon">IG</span>
                     <span class="icon">FB</span>

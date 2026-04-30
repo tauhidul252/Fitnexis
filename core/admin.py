@@ -1,3 +1,1 @@
-from django.contrib import admin
-
-# Register your models here.
+# Default admin panel removed as per user request.

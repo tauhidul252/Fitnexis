@@ -21,6 +21,10 @@ def login_view(request):
             messages.error(request, "Invalid username or password.")
     return render(request, 'login.html')
 
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
 def signup_view(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -83,3 +87,6 @@ def admin_dashboard(request):
         'offers': offers,
     }
     return render(request, 'dashboard_admin.html', context)
+
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
