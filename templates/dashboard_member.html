@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section-dark" style="padding-top: 100px;">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="user-info">
+                <h3>{{ request.user.username }}</h3>
+                <p class="role-badge">{{ request.user.profile.role }}</p>
+            </div>
+            <nav class="side-nav">
+                <a href="#overview" class="active">Overview</a>
+                <a href="#progress">Progress</a>
+                <a href="#classes">Classes</a>
+                <a href="#membership">Membership</a>
+                <a href="#settings">Settings</a>
+            </nav>
+        </aside>
+
+        <div class="dashboard-main">
+            <header class="dash-header">
+                <h2>Welcome Back, <span class="highlight">{{ request.user.username }}</span>!</h2>
+                <p>Track your fitness journey and manage your sessions.</p>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Current Plan</h4>
+                    <p class="stat-value">Basic</p>
+                    <p class="stat-sub">Expires in 15 days</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Attendance</h4>
+                    <p class="stat-value">85%</p>
+                    <p class="stat-sub">Last 30 days</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Next Class</h4>
+                    <p class="stat-value">Yoga</p>
+                    <p class="stat-sub">Today @ 5:00 PM</p>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-card">
+                    <h3>Recent Progress</h3>
+                    <div class="progress-list">
+                        {% for entry in progress %}
+                        <div class="progress-item">
+                            <span>{{ entry.date }}</span>
+                            <span>{{ entry.weight }} kg</span>
+                        </div>
+                        {% empty %}
+                        <p>No progress recorded yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3>Upcoming Classes</h3>
+                    <div class="booking-list">
+                        {% for booking in bookings %}
+                        <div class="booking-item">
+                            <h4>{{ booking.gym_class.title }}</h4>
+                            <p>{{ booking.gym_class.schedule_time }}</p>
+                        </div>
+                        {% empty %}
+                        <p>No upcoming classes.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 2rem;
+        min-height: 80vh;
+    }
+
+    .sidebar {
+        background: var(--bg-dark-secondary);
+        border-radius: 12px;
+        padding: 2rem;
+        border: 1px solid #333;
+    }
+
+    .user-info {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #333;
+    }
+
+    .role-badge {
+        background: var(--accent);
+        color: #000;
+        display: inline-block;
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-top: 0.5rem;
+    }
+
+    .side-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .side-nav a {
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .side-nav a.active, .side-nav a:hover {
+        background: rgba(245, 176, 38, 0.1);
+        color: var(--accent);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .stat-card {
+        background: var(--bg-dark-secondary);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #333;
+        text-align: center;
+    }
+
+    .stat-card h4 {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: var(--accent);
+    }
+
+    .stat-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .content-card {
+        background: var(--bg-dark-secondary);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #333;
+    }
+
+    .content-card h3 {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+
+    .progress-item, .booking-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #333;
+        font-size: 0.9rem;
+    }
+
+    .progress-item:last-child, .booking-item:last-child {
+        border-bottom: none;
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-container {
+            grid-template-columns: 1fr;
+        }
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
