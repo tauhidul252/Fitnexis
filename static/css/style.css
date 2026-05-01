@@ -68,7 +68,28 @@ a { text-decoration: none; color: inherit; transition: all 0.3s; }
 .nav-links { display: flex; gap: 2rem; list-style: none; }
 .nav-links a { font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; }
 .nav-links a:hover { color: var(--accent); }
-.nav-actions { display: flex; gap: 1rem; }
+.nav-actions { display: flex; gap: 1rem; align-items: center; }
+.user-profile-nav { display: flex; align-items: center; position: relative; cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: background 0.3s; }
+.profile-link-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.user-profile-nav:hover { background: rgba(255,255,255,0.05); }
+.nav-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+.user-info-wrapper { display: flex; flex-direction: column; line-height: 1.2; }
+.welcome-text { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+.user-name { font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.view-profile-link { font-size: 0.6rem; color: #fff; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; margin-top: 2px; }
+.view-profile-link:hover { background: var(--accent); color: #000; }
+.profile-dropdown { 
+    position: absolute; top: 100%; right: 0; background: #1a1a1c; border: 1px solid #333; 
+    border-radius: 8px; width: 160px; padding: 8px; display: none; flex-direction: column; gap: 4px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000;
+}
+.user-profile-nav:hover .profile-dropdown { display: flex; }
+.dropdown-item { 
+    font-size: 0.85rem; color: #fff; background: none; border: none; text-align: left; 
+    padding: 10px 12px; cursor: pointer; width: 100%; border-radius: 6px;
+    display: block; font-family: var(--font-body); font-weight: 500;
+}
+.dropdown-item:hover { background: var(--accent); color: #000; }
 
 /* Sections */
 .section-dark { background-color: var(--bg-dark); color: var(--text-white); padding: 5rem 10%; }

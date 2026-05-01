@@ -20,18 +20,28 @@
             <li><a href="#about">ABOUT</a></li>
             <li><a href="#classes">CLASSES</a></li>
             <li><a href="#schedule">SCHEDULE</a></li>
-            {% if user.is_authenticated %}
-            <li><a href="{% url 'dashboard' %}" class="highlight">DASHBOARD</a></li>
-            {% endif %}
             <li><a href="#blogs">BLOG</a></li>
             <li><a href="#contact">CONTACT</a></li>
         </ul>
         <div class="nav-actions">
             {% if user.is_authenticated %}
-            <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn-outline">LOGOUT</button>
-            </form>
+            <div class="user-profile-nav">
+                <a href="{% url 'dashboard' %}" class="profile-link-wrapper">
+                    <img src="{% if user.profile.profile_pic %}{{ user.profile.profile_pic.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}&background=f5b026&color=000{% endif %}" alt="Profile" class="nav-avatar">
+                    <div class="user-info-wrapper">
+                        <span class="welcome-text">Welcome</span>
+                        <span class="user-name">{{ user.username|capfirst }}</span>
+                        <span class="view-profile-link">View Profile</span>
+                    </div>
+                </a>
+                <div class="profile-dropdown">
+                    <a href="{% url 'dashboard' %}" class="dropdown-item">Dashboard</a>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item">Logout</button>
+                    </form>
+                </div>
+            </div>
             {% else %}
             <a href="{% url 'login' %}" class="btn-outline">LOGIN</a>
             <a href="{% url 'signup' %}" class="btn-primary">SIGN UP</a>
