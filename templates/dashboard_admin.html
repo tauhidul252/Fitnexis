@@ -72,8 +72,8 @@
                                 <span class="highlight" style="margin-left: 10px;">${{ plan.price }}</span>
                             </div>
                             <div class="plan-actions">
-                                <button onclick="openEditPlanModal('{{ plan.id }}', '{{ plan.title }}', '{{ plan.description }}', '{{ plan.price }}', '{{ plan.duration_months }}')" class="action-link">Edit</button>
-                                <a href="javascript:void(0)" onclick="showDeleteConfirm('{% url 'delete_plan' plan.id %}', 'Are you sure you want to delete the {{ plan.title }} plan?')" class="action-link delete">Delete</a>
+                                <button onclick="openEditPlanModal('{{ plan.id }}', '{{ plan.title }}', '{{ plan.description }}', '{{ plan.price }}', '{{ plan.duration_months }}')" class="action-link" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <a href="javascript:void(0)" onclick="showDeleteConfirm('{% url 'delete_plan' plan.id %}', 'Are you sure you want to delete the {{ plan.title }} plan?')" class="action-link delete" title="Delete"><i class="fa-solid fa-trash"></i></a>
                             </div>
                         </div>
                         {% empty %}
@@ -145,7 +145,7 @@
 
 <style>
     .plan-actions { display: flex; gap: 10px; }
-    .action-link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+    .action-link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; }
     .action-link.delete { color: #ff4444; }
     .action-link:hover { text-decoration: underline; }
     /* Modal Styles */
