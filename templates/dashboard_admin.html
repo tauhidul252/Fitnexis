@@ -27,20 +27,20 @@
             </header>
 
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.1s;">
                     <h4>Total Revenue</h4>
-                    <p class="stat-value">$12,450</p>
-                    <p class="stat-sub">This month</p>
+                    <p class="stat-value">${{ total_revenue|floatformat:2 }}</p>
+                    <p class="stat-sub">Lifetime</p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.2s;">
                     <h4>Active Members</h4>
-                    <p class="stat-value">156</p>
-                    <p class="stat-sub">+12 this week</p>
+                    <p class="stat-value">{{ active_members_count }}</p>
+                    <p class="stat-sub">Currently enrolled</p>
                 </div>
-                <div class="stat-card">
-                    <h4>Pending Payments</h4>
-                    <p class="stat-value">8</p>
-                    <p class="stat-sub">Action required</p>
+                <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.3s;">
+                    <h4>Today's Sales</h4>
+                    <p class="stat-value">{{ recent_payments_count }}</p>
+                    <p class="stat-sub">Transactions today</p>
                 </div>
             </div>
 
@@ -67,13 +67,19 @@
                     <div class="plan-list">
                         {% for plan in plans %}
                         <div class="plan-item">
-                            <span>{{ plan.title }}</span>
-                            <span class="highlight">${{ plan.price }}</span>
+                            <div class="plan-details">
+                                <strong>{{ plan.title }}</strong>
+                                <span class="highlight" style="margin-left: 10px;">${{ plan.price }}</span>
+                            </div>
+                            <div class="plan-actions">
+                                <button onclick="openEditPlanModal('{{ plan.id }}', '{{ plan.title }}', '{{ plan.description }}', '{{ plan.price }}', '{{ plan.duration_months }}')" class="action-link">Edit</button>
+                                <a href="javascript:void(0)" onclick="showDeleteConfirm('{% url 'delete_plan' plan.id %}', 'Are you sure you want to delete the {{ plan.title }} plan?')" class="action-link delete">Delete</a>
+                            </div>
                         </div>
                         {% empty %}
                         <p>No plans created.</p>
                         {% endfor %}
-                        <button class="btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.5rem;">ADD PLAN</button>
+                        <button onclick="toggleModal('addPlanModal')" class="btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.5rem;">ADD PLAN</button>
                     </div>
                 </div>
             </div>
@@ -81,7 +87,130 @@
     </div>
 </section>
 
+<!-- Add Plan Modal -->
+<div id="addPlanModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('addPlanModal')">&times;</span>
+        <h3>Create New Membership Plan</h3>
+        <form action="{% url 'add_plan' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Plan Title</label>
+                <input type="text" name="title" required placeholder="e.g. Pro Membership">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" placeholder="What's included?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price ($)</label>
+                <input type="number" step="0.01" name="price" required>
+            </div>
+            <div class="form-group">
+                <label>Duration (Months)</label>
+                <input type="number" name="duration_months" value="1" required>
+            </div>
+            <button type="submit" class="btn-primary">Create Plan</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Plan Modal -->
+<div id="editPlanModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('editPlanModal')">&times;</span>
+        <h3>Edit Membership Plan</h3>
+        <form id="editPlanForm" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Plan Title</label>
+                <input type="text" name="title" id="edit_title" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" id="edit_description"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price ($)</label>
+                <input type="number" step="0.01" name="price" id="edit_price" required>
+            </div>
+            <div class="form-group">
+                <label>Duration (Months)</label>
+                <input type="number" name="duration_months" id="edit_duration" required>
+            </div>
+            <button type="submit" class="btn-primary">Update Plan</button>
+        </form>
+    </div>
+</div>
+
 <style>
+    .plan-actions { display: flex; gap: 10px; }
+    .action-link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+    .action-link.delete { color: #ff4444; }
+    .action-link:hover { text-decoration: underline; }
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: var(--bg-dark-secondary);
+        margin: 10% auto;
+        padding: 2rem;
+        border: 1px solid var(--accent);
+        width: 400px;
+        border-radius: 15px;
+        position: relative;
+        text-align: left;
+    }
+
+    .close {
+        position: absolute;
+        right: 1.5rem;
+        top: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .form-group input, .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        color: #fff;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 1rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
     /* Reusing styles from previous dashboards */
     .dashboard-container { display: grid; grid-template-columns: 250px 1fr; gap: 2rem; min-height: 80vh; }
     .sidebar { background: var(--bg-dark-secondary); border-radius: 12px; padding: 2rem; border: 1px solid #333; }
@@ -96,7 +225,13 @@
     .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
     .stat-sub { font-size: 0.75rem; color: var(--text-muted); }
     .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .content-card { background: var(--bg-dark-secondary); padding: 1.5rem; border-radius: 12px; border: 1px solid #333; }
+    .content-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(5px);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
     .content-card h3 { margin-bottom: 1rem; font-size: 1.2rem; }
     .payment-item, .plan-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #333; }
     .payment-item:last-child, .plan-item:last-child { border-bottom: none; }
@@ -107,4 +242,31 @@
         .content-grid { grid-template-columns: 1fr; }
     }
 </style>
+
+<script>
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (modal.style.display === 'block') {
+            modal.style.display = 'none';
+        } else {
+            modal.style.display = 'block';
+        }
+    }
+
+    function openEditPlanModal(id, title, desc, price, duration) {
+        document.getElementById('editPlanForm').action = `/edit-plan/${id}/`;
+        document.getElementById('edit_title').value = title;
+        document.getElementById('edit_description').value = desc;
+        document.getElementById('edit_price').value = price;
+        document.getElementById('edit_duration').value = duration;
+        toggleModal('editPlanModal');
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = "none";
+        }
+    }
+</script>
 {% endblock %}

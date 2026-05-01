@@ -54,30 +54,18 @@
         <p class="header-desc">The classes you take provide value to your fitness and well being. Taking these classes regularly will help you in your daily life, reducing stress and promoting a healthy lifestyle.</p>
     </div>
     <div class="class-grid">
+        {% for class in classes %}
         <div class="class-card">
-            <img src="{% static 'images/hero_banner.png' %}" class="card-img" alt="Body Building">
+            <img src="{% if class.image %}{{ class.image.url }}{% else %}{% static 'images/class_crossfit.png' %}{% endif %}" class="card-img" alt="{{ class.title }}">
             <div class="card-content">
-                <h3 class="highlight">BODY BUILDING CLASS</h3>
-                <p>David Smith</p>
+                <h3 class="highlight">{{ class.title|upper }}</h3>
+                <p>{{ class.trainer.username }}</p>
                 <div class="card-bottom-line"></div>
             </div>
         </div>
-        <div class="class-card">
-            <img src="{% static 'images/class_crossfit.png' %}" class="card-img" alt="Cardio">
-            <div class="card-content">
-                <h3 class="highlight">CARDIO CLASS</h3>
-                <p>David Smith</p>
-                <div class="card-bottom-line"></div>
-            </div>
-        </div>
-        <div class="class-card">
-            <img src="{% static 'images/instructor_1.png' %}" class="card-img" alt="Weight Lifting">
-            <div class="card-content">
-                <h3 class="highlight">WEIGHT LIFTER CLASS</h3>
-                <p>David Smith</p>
-                <div class="card-bottom-line"></div>
-            </div>
-        </div>
+        {% empty %}
+        <p>No classes available at the moment.</p>
+        {% endfor %}
     </div>
     <div class="pagination">
         <span>1</span> <span>/</span> <span class="active">2</span> <span>3</span> <span>&gt;</span>
@@ -96,26 +84,15 @@
             <div>TIME</div>
             <div>TRAINER</div>
         </div>
+        {% for item in schedule %}
         <div class="table-row">
-            <div>SUNDAY</div>
-            <div>08:00AM - 10:00AM</div>
-            <div>DAVID</div>
+            <div>{{ item.schedule_time|date:"l"|upper }}</div>
+            <div>{{ item.schedule_time|date:"h:i A" }}</div>
+            <div>{{ item.trainer.username|upper }}</div>
         </div>
-        <div class="table-row">
-            <div>MONDAY</div>
-            <div>08:00AM - 10:00AM</div>
-            <div>JOHN</div>
-        </div>
-        <div class="table-row">
-            <div>TUESDAY</div>
-            <div>08:00AM - 10:00AM</div>
-            <div>JACK</div>
-        </div>
-        <div class="table-row">
-            <div>WEDNESDAY</div>
-            <div>08:00AM - 10:00AM</div>
-            <div>MICHAEL</div>
-        </div>
+        {% empty %}
+        <p style="text-align: center; padding: 1rem;">No classes scheduled.</p>
+        {% endfor %}
     </div>
 </section>
 
@@ -126,30 +103,18 @@
         <p class="header-desc" style="color:var(--text-dark);">Professional and certified trainers who are highly skilled in fitness and training.</p>
     </div>
     <div class="instructor-grid">
+        {% for trainer in trainers %}
         <div class="instructor-card-dark">
-            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
+            <img src="{% if trainer.profile.profile_pic %}{{ trainer.profile.profile_pic.url }}{% else %}{% static 'images/instructor_1.png' %}{% endif %}" alt="{{ trainer.username }}">
             <div class="trainer-info">
-                <h3>Tony</h3>
-                <p>Pro Trainer</p>
+                <h3>{{ trainer.username }}</h3>
+                <p>Expert Trainer</p>
                 <a href="#" class="btn-primary outline">VIEW PROFILE</a>
             </div>
         </div>
-        <div class="instructor-card-dark">
-            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
-            <div class="trainer-info">
-                <h3>Mike</h3>
-                <p>Pro Trainer</p>
-                <a href="#" class="btn-primary outline">VIEW PROFILE</a>
-            </div>
-        </div>
-        <div class="instructor-card-dark">
-            <img src="{% static 'images/instructor_1.png' %}" alt="Trainer">
-            <div class="trainer-info">
-                <h3>John</h3>
-                <p>Pro Trainer</p>
-                <a href="#" class="btn-primary outline">VIEW PROFILE</a>
-            </div>
-        </div>
+        {% empty %}
+        <p>Our trainers are busy preparing for you!</p>
+        {% endfor %}
     </div>
 </section>
 

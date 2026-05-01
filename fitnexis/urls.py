@@ -17,7 +17,11 @@ Including another URLconf
 from django.urls import path
 from django.shortcuts import render
 from django.views.generic import RedirectView
-from core.views import home, login_view, signup_view, logout_view, forgot_password_view, dashboard, member_dashboard, trainer_dashboard, admin_dashboard, error_404
+from core.views import (
+    home, login_view, signup_view, logout_view, forgot_password_view, 
+    dashboard, member_dashboard, trainer_dashboard, admin_dashboard, 
+    error_404, book_class, update_progress, mark_attendance, add_class, add_plan, edit_plan, delete_plan
+)
 
 urlpatterns = [
     path('admin/logout/', RedirectView.as_view(url='/logout/', permanent=True)),
@@ -30,6 +34,13 @@ urlpatterns = [
     path('dashboard/member/', member_dashboard, name='member_dashboard'),
     path('dashboard/trainer/', trainer_dashboard, name='trainer_dashboard'),
     path('dashboard/admin/', admin_dashboard, name='admin_dashboard'),
+    path('book-class/<int:class_id>/', book_class, name='book_class'),
+    path('update-progress/', update_progress, name='update_progress'),
+    path('mark-attendance/<int:booking_id>/', mark_attendance, name='mark_attendance'),
+    path('add-class/', add_class, name='add_class'),
+    path('add-plan/', add_plan, name='add_plan'),
+    path('edit-plan/<int:plan_id>/', edit_plan, name='edit_plan'),
+    path('delete-plan/<int:plan_id>/', delete_plan, name='delete_plan'),
     path('404/', lambda r: render(r, '404.html'), name='test_404'),
 ]
 
