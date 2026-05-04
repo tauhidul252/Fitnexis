@@ -259,3 +259,314 @@ def delete_plan(request, plan_id):
 
 def error_404(request, exception):
     return render(request, '404.html', status=404)
+
+
+# ─────────────────────────────────────────────
+#  MANAGE MEMBERS
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_members(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.db.models import Count
+    members = User.objects.filter(profile__role='member').select_related('profile').prefetch_related(
+        'subscription_set__plan', 'attendance_set', 'booking_set'
+    )
+
+    # AI insight per member
+    member_data = []
+    for m in members:
+        att_count = m.attendance_set.filter(is_present=True).count()
+        bookings   = m.booking_set.count()
+        active_sub = m.subscription_set.filter(is_active=True).first()
+
+        # Simple rule-based AI insight
+        if att_count == 0:
+            insight = "⚠️ No attendance recorded. Consider a re-engagement email."
+            risk    = "high"
+        elif att_count < 5:
+            insight = "📉 Low attendance. Recommend a personal trainer check-in."
+            risk    = "medium"
+        elif bookings == 0:
+            insight = "📅 Active but not booking classes. Suggest group sessions."
+            risk    = "low"
+        else:
+            insight = "✅ Engaged member. Great retention candidate."
+            risk    = "good"
+
+        member_data.append({
+            'user'       : m,
+            'att_count'  : att_count,
+            'bookings'   : bookings,
+            'active_sub' : active_sub,
+            'insight'    : insight,
+            'risk'       : risk,
+        })
+
+    plans = MembershipPlan.objects.all()
+    context = {
+        'member_data': member_data,
+        'plans'      : plans,
+        'total_members': len(member_data),
+        'at_risk'    : sum(1 for m in member_data if m['risk'] == 'high'),
+    }
+    return render(request, 'manage_members.html', context)
+
+
+@login_required
+def add_member(request):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    if request.method == 'POST':
+        username  = request.POST.get('username')
+        email     = request.POST.get('email')
+        password  = request.POST.get('password')
+        phone     = request.POST.get('phone', '')
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f"Username '{username}' already exists.")
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.profile.role  = 'member'
+            user.profile.phone = phone
+            user.profile.save()
+            messages.success(request, f"Member '{username}' added successfully!")
+    return redirect('manage_members')
+
+
+@login_required
+def edit_member(request, member_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    member = User.objects.get(id=member_id)
+    if request.method == 'POST':
+        member.email            = request.POST.get('email', member.email)
+        member.first_name       = request.POST.get('first_name', member.first_name)
+        member.last_name        = request.POST.get('last_name', member.last_name)
+        member.profile.phone    = request.POST.get('phone', member.profile.phone)
+        member.profile.address  = request.POST.get('address', member.profile.address)
+        member.save()
+        member.profile.save()
+        messages.success(request, f"Member '{member.username}' updated.")
+    return redirect('manage_members')
+
+
+@login_required
+def delete_member(request, member_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    user = User.objects.get(id=member_id)
+    uname = user.username
+    user.delete()
+    messages.success(request, f"Member '{uname}' deleted.")
+    return redirect('manage_members')
+
+
+# ─────────────────────────────────────────────
+#  MANAGE TRAINERS
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_trainers(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    trainers = User.objects.filter(profile__role='trainer').select_related('profile')
+
+    trainer_data = []
+    for t in trainers:
+        classes      = GymClass.objects.filter(trainer=t)
+        classes_count = classes.count()
+        members_count = Booking.objects.filter(gym_class__trainer=t).values('user').distinct().count()
+        total_bookings = Booking.objects.filter(gym_class__trainer=t).count()
+
+        # AI performance insight
+        if classes_count == 0:
+            insight     = "⚠️ No classes assigned. Assign classes to activate trainer."
+            performance = "inactive"
+        elif members_count == 0:
+            insight     = "📭 Classes created but no bookings yet. Promote to members."
+            performance = "low"
+        elif total_bookings < 5:
+            insight     = "📈 Growing presence. Encourage marketing of their sessions."
+            performance = "medium"
+        elif members_count >= 10:
+            insight     = "🌟 Top performer! High member engagement and retention."
+            performance = "top"
+        else:
+            insight     = "✅ Consistent performance. Good class attendance rates."
+            performance = "good"
+
+        trainer_data.append({
+            'user'         : t,
+            'classes_count': classes_count,
+            'members_count': members_count,
+            'total_bookings': total_bookings,
+            'insight'      : insight,
+            'performance'  : performance,
+            'classes'      : classes,
+        })
+
+    context = {
+        'trainer_data' : trainer_data,
+        'total_trainers': len(trainer_data),
+        'top_performers': sum(1 for t in trainer_data if t['performance'] == 'top'),
+    }
+    return render(request, 'manage_trainers.html', context)
+
+
+@login_required
+def add_trainer(request):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email    = request.POST.get('email')
+        password = request.POST.get('password')
+        bio      = request.POST.get('bio', '')
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f"Username '{username}' already exists.")
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.profile.role = 'trainer'
+            user.profile.bio  = bio
+            user.profile.save()
+            messages.success(request, f"Trainer '{username}' added successfully!")
+    return redirect('manage_trainers')
+
+
+@login_required
+def edit_trainer(request, trainer_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    trainer = User.objects.get(id=trainer_id)
+    if request.method == 'POST':
+        trainer.email          = request.POST.get('email', trainer.email)
+        trainer.first_name     = request.POST.get('first_name', trainer.first_name)
+        trainer.last_name      = request.POST.get('last_name', trainer.last_name)
+        trainer.profile.bio    = request.POST.get('bio', trainer.profile.bio)
+        trainer.profile.phone  = request.POST.get('phone', trainer.profile.phone)
+        trainer.save()
+        trainer.profile.save()
+        messages.success(request, f"Trainer '{trainer.username}' updated.")
+    return redirect('manage_trainers')
+
+
+@login_required
+def delete_trainer(request, trainer_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    user = User.objects.get(id=trainer_id)
+    uname = user.username
+    user.delete()
+    messages.success(request, f"Trainer '{uname}' deleted.")
+    return redirect('manage_trainers')
+
+
+# ─────────────────────────────────────────────
+#  AI CHAT API  (no external key needed)
+# ─────────────────────────────────────────────
+
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+def ai_chat(request):
+    """Rule-based AI assistant that answers questions about gym data."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    data = json.loads(request.body)
+    query = data.get('message', '').lower().strip()
+
+    # ── gather live stats ──
+    total_members  = User.objects.filter(profile__role='member').count()
+    total_trainers = User.objects.filter(profile__role='trainer').count()
+    total_classes  = GymClass.objects.count()
+    total_bookings = Booking.objects.count()
+    total_revenue  = Payment.objects.aggregate(__import__('django.db.models', fromlist=['Sum']).Sum('amount'))['amount__sum'] or 0
+    active_subs    = Subscription.objects.filter(is_active=True).count()
+    at_risk        = User.objects.filter(profile__role='member').exclude(
+        attendance__is_present=True
+    ).distinct().count()
+
+    # ── rule-based NLU ──
+    reply = ""
+
+    if any(w in query for w in ['member', 'members', 'সদস্য']):
+        if any(w in query for w in ['how many', 'total', 'count', 'কতজন', 'কত']):
+            reply = f"📊 There are currently **{total_members} members** registered in the system. Of these, **{active_subs} have active subscriptions**."
+        elif any(w in query for w in ['risk', 'inactive', 'churn', 'ঝুঁকি']):
+            reply = f"⚠️ **{at_risk} members** have no attendance records and may be at risk of churning. I recommend sending them a re-engagement email or offering a discount."
+        elif any(w in query for w in ['active', 'subscription', 'plan']):
+            reply = f"✅ **{active_subs} members** currently have active subscriptions. That's {round((active_subs/total_members*100) if total_members else 0)}% of your total member base."
+        else:
+            reply = f"👥 Member summary: **{total_members} total**, **{active_subs} active subscriptions**, **{at_risk} at-risk** (no attendance)."
+
+    elif any(w in query for w in ['trainer', 'trainers', 'প্রশিক্ষক']):
+        if any(w in query for w in ['how many', 'total', 'count', 'কতজন']):
+            reply = f"🏋️ You have **{total_trainers} trainers** on staff managing **{total_classes} classes** with a combined **{total_bookings} bookings**."
+        elif any(w in query for w in ['best', 'top', 'perform', 'সেরা']):
+            top_trainer = User.objects.filter(profile__role='trainer').annotate(
+                bc=__import__('django.db.models', fromlist=['Count']).Count('classes_taught__booking')
+            ).order_by('-bc').first()
+            if top_trainer:
+                bc = Booking.objects.filter(gym_class__trainer=top_trainer).count()
+                reply = f"🌟 Your top-performing trainer is **{top_trainer.get_full_name() or top_trainer.username}** with **{bc} total bookings** across their classes."
+            else:
+                reply = "No trainer data available yet."
+        else:
+            reply = f"🏋️ Trainer overview: **{total_trainers} trainers**, managing **{total_classes} classes**, with **{total_bookings} total bookings**."
+
+    elif any(w in query for w in ['revenue', 'money', 'income', 'আয়', 'রাজস্ব']):
+        reply = f"💰 Total lifetime revenue is **${total_revenue:,.2f}**. You have **{active_subs} active subscriptions** currently generating recurring income."
+
+    elif any(w in query for w in ['class', 'classes', 'ক্লাস']):
+        most_booked = GymClass.objects.annotate(
+            bc=__import__('django.db.models', fromlist=['Count']).Count('booking')
+        ).order_by('-bc').first()
+        if most_booked:
+            reply = f"📅 You have **{total_classes} classes** in total. The most popular is **'{most_booked.title}'** with **{most_booked.bc} bookings**."
+        else:
+            reply = f"📅 There are **{total_classes} classes** currently scheduled."
+
+    elif any(w in query for w in ['attendance', 'উপস্থিতি']):
+        total_att = Attendance.objects.filter(is_present=True).count()
+        reply = f"📋 There are **{total_att} total attendance records** across all members. Members with zero attendance: **{at_risk}**."
+
+    elif any(w in query for w in ['summary', 'overview', 'report', 'সারসংক্ষেপ', 'সারাংশ']):
+        reply = (
+            f"📈 **Fitnexis AI Summary**\n\n"
+            f"• 👥 Members: **{total_members}** ({active_subs} active subscriptions)\n"
+            f"• 🏋️ Trainers: **{total_trainers}**\n"
+            f"• 📅 Classes: **{total_classes}** ({total_bookings} total bookings)\n"
+            f"• 💰 Revenue: **${total_revenue:,.2f}**\n"
+            f"• ⚠️ At-risk members: **{at_risk}**\n\n"
+            f"Overall gym health looks {'🟢 good' if at_risk < total_members * 0.3 else '🔴 needs attention'}."
+        )
+
+    elif any(w in query for w in ['help', 'what can you', 'সাহায্য', 'কি করতে পারো']):
+        reply = (
+            "🤖 I'm the **Fitnexis AI Assistant**. You can ask me:\n\n"
+            "• *How many members do we have?*\n"
+            "• *Who is the top trainer?*\n"
+            "• *What is our total revenue?*\n"
+            "• *Which class is most booked?*\n"
+            "• *How many at-risk members are there?*\n"
+            "• *Give me a full summary*"
+        )
+
+    else:
+        reply = (
+            "🤔 I'm not sure about that. Try asking:\n"
+            "• 'How many members do we have?'\n"
+            "• 'Who is the top trainer?'\n"
+            "• 'Give me a summary'\n"
+            "• 'What is our revenue?'"
+        )
+
+    return JsonResponse({'reply': reply})

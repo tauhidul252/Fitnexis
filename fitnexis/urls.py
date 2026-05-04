@@ -18,9 +18,13 @@ from django.urls import path
 from django.shortcuts import render
 from django.views.generic import RedirectView
 from core.views import (
-    home, login_view, signup_view, logout_view, forgot_password_view, 
-    dashboard, member_dashboard, trainer_dashboard, admin_dashboard, 
-    error_404, book_class, update_progress, mark_attendance, add_class, add_plan, edit_plan, delete_plan
+    home, login_view, signup_view, logout_view, forgot_password_view,
+    dashboard, member_dashboard, trainer_dashboard, admin_dashboard,
+    error_404, book_class, update_progress, mark_attendance, add_class,
+    add_plan, edit_plan, delete_plan,
+    manage_members, add_member, edit_member, delete_member,
+    manage_trainers, add_trainer, edit_trainer, delete_trainer,
+    ai_chat,
 )
 
 urlpatterns = [
@@ -41,6 +45,18 @@ urlpatterns = [
     path('add-plan/', add_plan, name='add_plan'),
     path('edit-plan/<int:plan_id>/', edit_plan, name='edit_plan'),
     path('delete-plan/<int:plan_id>/', delete_plan, name='delete_plan'),
+    # Members
+    path('manage/members/', manage_members, name='manage_members'),
+    path('manage/members/add/', add_member, name='add_member'),
+    path('manage/members/edit/<int:member_id>/', edit_member, name='edit_member'),
+    path('manage/members/delete/<int:member_id>/', delete_member, name='delete_member'),
+    # Trainers
+    path('manage/trainers/', manage_trainers, name='manage_trainers'),
+    path('manage/trainers/add/', add_trainer, name='add_trainer'),
+    path('manage/trainers/edit/<int:trainer_id>/', edit_trainer, name='edit_trainer'),
+    path('manage/trainers/delete/<int:trainer_id>/', delete_trainer, name='delete_trainer'),
+    # AI Chat
+    path('ai/chat/', ai_chat, name='ai_chat'),
     path('404/', lambda r: render(r, '404.html'), name='test_404'),
 ]
 
