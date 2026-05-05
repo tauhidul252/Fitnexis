@@ -19,13 +19,19 @@ class Profile(models.Model):
         return f"{self.user.username} - {self.role}"
 
 class MembershipPlan(models.Model):
+    UNIT_CHOICES = (
+        ('days', 'Days'),
+        ('months', 'Months'),
+        ('years', 'Years'),
+    )
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    duration_months = models.IntegerField(default=1)
+    duration_months = models.IntegerField(default=1) # Keeping this for compatibility or as 'value'
+    duration_unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='months')
     
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.duration_months} {self.duration_unit})"
 
 class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -37,15 +43,38 @@ class Subscription(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.plan.title}"
 
+    @property
+    def is_valid(self):
+        from django.utils import timezone
+        return self.is_active and self.end_date >= timezone.now().date()
+
 class Payment(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+        ('approved', 'Approved'), # For offline payments
+    )
+    METHOD_CHOICES = (
+        ('online', 'Online'),
+        ('offline', 'Offline'),
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plan = models.ForeignKey(MembershipPlan, on_delete=models.SET_NULL, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_id = models.CharField(max_length=100, unique=True)
-    status = models.CharField(max_length=20, default='completed')
+    transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    payment_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='online')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Offline payment fields
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    account_number = models.CharField(max_length=50, blank=True, null=True)
+    deposit_slip = models.ImageField(upload_to='slips/', blank=True, null=True)
+    
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.amount}"
+        return f"{self.user.username} - {self.amount} ({self.status})"
 
 class GymClass(models.Model):
     title = models.CharField(max_length=100)

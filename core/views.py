@@ -2,6 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import Subscription, MembershipPlan, GymClass, Booking, Attendance, FitnessProgress, Payment, Offer
+import uuid
+import requests
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
     classes = GymClass.objects.all()[:3]
@@ -76,8 +81,12 @@ def member_dashboard(request):
     # Simple logic: assume 20 possible gym days in 30 days for 100%
     attendance_pct = min(int((attendance_count / 20) * 100), 100)
     
-    # Current Plan
-    active_sub = Subscription.objects.filter(user=user, is_active=True).first()
+    # Current Plan (Active and Not Expired)
+    active_sub = Subscription.objects.filter(
+        user=user, 
+        is_active=True, 
+        end_date__gte=timezone.now().date()
+    ).first()
     
     # Next Class
     next_booking = bookings.first()
@@ -97,7 +106,18 @@ def member_dashboard(request):
 
 @login_required
 def book_class(request, class_id):
-    from .models import GymClass, Booking
+    # Check for active and valid (not expired) subscription
+    from django.utils import timezone
+    active_sub = Subscription.objects.filter(
+        user=request.user, 
+        is_active=True, 
+        end_date__gte=timezone.now().date()
+    ).first()
+    
+    if not active_sub:
+        messages.error(request, "Your membership has expired or you don't have an active plan. Please renew to book classes.")
+        return redirect('membership_plans')
+
     gym_class = GymClass.objects.get(id=class_id)
     # Check capacity
     current_bookings = Booking.objects.filter(gym_class=gym_class).count()
@@ -179,6 +199,53 @@ def add_class(request):
         messages.success(request, f"Class '{title}' created successfully!")
     return redirect('trainer_dashboard')
 
+
+# ─── Admin: assign a new class to a specific trainer ───────────────────────────
+@login_required
+def assign_class_to_trainer(request, trainer_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    trainer = User.objects.get(id=trainer_id)
+
+    if request.method == 'POST':
+        title         = request.POST.get('title', '').strip()
+        description   = request.POST.get('description', '')
+        schedule_time = request.POST.get('schedule_time')
+        capacity      = request.POST.get('capacity', 20)
+
+        if not title or not schedule_time:
+            messages.error(request, "Title and schedule time are required.")
+            return redirect('manage_trainers')
+
+        GymClass.objects.create(
+            title=title,
+            description=description,
+            schedule_time=schedule_time,
+            capacity=capacity,
+            trainer=trainer,
+        )
+        messages.success(request, f"Class '{title}' assigned to {trainer.username}!")
+
+    return redirect('manage_trainers')
+
+
+# ─── Admin: remove (delete) a class from a trainer ─────────────────────────────
+@login_required
+def remove_class_from_trainer(request, class_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    gym_class = GymClass.objects.get(id=class_id)
+    title = gym_class.title
+    gym_class.delete()
+    messages.success(request, f"Class '{title}' removed.")
+    return redirect('manage_trainers')
+
+
+
 @login_required
 def admin_dashboard(request):
     from django.db.models import Sum
@@ -217,15 +284,17 @@ def add_plan(request):
         description = request.POST.get('description')
         price = request.POST.get('price')
         duration_months = request.POST.get('duration_months', 1)
+        duration_unit = request.POST.get('duration_unit', 'months')
         
         MembershipPlan.objects.create(
             title=title,
             description=description,
             price=price,
-            duration_months=duration_months
+            duration_months=duration_months,
+            duration_unit=duration_unit
         )
         messages.success(request, f"Plan '{title}' created successfully!")
-    return redirect('admin_dashboard')
+    return redirect('manage_plans')
 
 @login_required
 def edit_plan(request, plan_id):
@@ -240,9 +309,10 @@ def edit_plan(request, plan_id):
         plan.description = request.POST.get('description')
         plan.price = request.POST.get('price')
         plan.duration_months = request.POST.get('duration_months')
+        plan.duration_unit = request.POST.get('duration_unit', 'months')
         plan.save()
         messages.success(request, f"Plan '{plan.title}' updated successfully!")
-    return redirect('admin_dashboard')
+    return redirect('manage_plans')
 
 @login_required
 def delete_plan(request, plan_id):
@@ -255,10 +325,311 @@ def delete_plan(request, plan_id):
     title = plan.title
     plan.delete()
     messages.success(request, f"Plan '{title}' deleted successfully!")
-    return redirect('admin_dashboard')
+    return redirect('manage_plans')
+
+
+# ─────────────────────────────────────────────
+#  PAYMENTS PAGE
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_payments(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.db.models import Sum, Count
+
+    payments = Payment.objects.select_related('user').order_by('-timestamp')
+
+    # Filter by search
+    search = request.GET.get('q', '').strip()
+    if search:
+        payments = payments.filter(user__username__icontains=search)
+
+    # Stats
+    total_revenue   = Payment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    today_revenue   = Payment.objects.filter(timestamp__date=timezone.now().date()).aggregate(Sum('amount'))['amount__sum'] or 0
+    total_txns      = Payment.objects.count()
+    today_txns      = Payment.objects.filter(timestamp__date=timezone.now().date()).count()
+
+    context = {
+        'payments'      : payments,
+        'total_revenue' : total_revenue,
+        'today_revenue' : today_revenue,
+        'total_txns'    : total_txns,
+        'today_txns'    : today_txns,
+        'search'        : search,
+    }
+    return render(request, 'manage_payments.html', context)
+
+
+@login_required
+def delete_payment(request, payment_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    pay = Payment.objects.get(id=payment_id)
+    pay.delete()
+    messages.success(request, "Payment record deleted.")
+    return redirect('manage_payments')
+
+
+# ─────────────────────────────────────────────
+#  MEMBERSHIP PLANS PAGE
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_plans(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.db.models import Count
+    plans = MembershipPlan.objects.annotate(
+        subscriber_count=Count('subscription', distinct=True)
+    )
+
+    context = {
+        'plans'      : plans,
+        'total_plans': plans.count(),
+        'total_subs' : Subscription.objects.filter(is_active=True).count(),
+    }
+    return render(request, 'manage_plans.html', context)
+
+
+# ─────────────────────────────────────────────
+#  OFFERS & DISCOUNTS PAGE
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_offers(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    offers = Offer.objects.all().order_by('expiry_date')
+    today  = timezone.now().date()
+
+    offer_data = []
+    for o in offers:
+        offer_data.append({
+            'offer'  : o,
+            'expired': o.expiry_date < today,
+        })
+
+    context = {
+        'offer_data'   : offer_data,
+        'total_offers' : offers.count(),
+        'active_offers': sum(1 for od in offer_data if not od['expired']),
+        'today'        : today,
+    }
+    return render(request, 'manage_offers.html', context)
+
+
+@login_required
+def add_offer(request):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    if request.method == 'POST':
+        title      = request.POST.get('title')
+        discount   = request.POST.get('discount_percentage')
+        expiry     = request.POST.get('expiry_date')
+        promo_code = request.POST.get('promo_code', '').upper().strip()
+
+        if Offer.objects.filter(promo_code=promo_code).exists():
+            messages.error(request, f"Promo code '{promo_code}' already exists.")
+        else:
+            Offer.objects.create(
+                title=title,
+                discount_percentage=discount,
+                expiry_date=expiry,
+                promo_code=promo_code,
+            )
+            messages.success(request, f"Offer '{title}' created!")
+    return redirect('manage_offers')
+
+
+@login_required
+def edit_offer(request, offer_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    offer = Offer.objects.get(id=offer_id)
+    if request.method == 'POST':
+        offer.title               = request.POST.get('title', offer.title)
+        offer.discount_percentage = request.POST.get('discount_percentage', offer.discount_percentage)
+        offer.expiry_date         = request.POST.get('expiry_date', offer.expiry_date)
+        offer.promo_code          = request.POST.get('promo_code', offer.promo_code).upper().strip()
+        offer.save()
+        messages.success(request, f"Offer '{offer.title}' updated!")
+    return redirect('manage_offers')
+
+
+@login_required
+def delete_offer(request, offer_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    offer = Offer.objects.get(id=offer_id)
+    title = offer.title
+    offer.delete()
+    messages.success(request, f"Offer '{title}' deleted.")
+    return redirect('manage_offers')
+
+
+# ─────────────────────────────────────────────
+#  REPORTS PAGE
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_reports(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.db.models import Sum, Count
+    from datetime import timedelta
+
+    today     = timezone.now().date()
+    last_30   = today - timedelta(days=30)
+    last_7    = today - timedelta(days=7)
+
+    # Revenue stats
+    total_revenue   = Payment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    revenue_30d     = Payment.objects.filter(timestamp__date__gte=last_30).aggregate(Sum('amount'))['amount__sum'] or 0
+    revenue_7d      = Payment.objects.filter(timestamp__date__gte=last_7).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # Member stats
+    total_members   = User.objects.filter(profile__role='member').count()
+    active_subs     = Subscription.objects.filter(is_active=True).count()
+    new_members_30d = User.objects.filter(profile__role='member', date_joined__date__gte=last_30).count()
+
+    # Class stats
+    total_classes   = GymClass.objects.count()
+    total_bookings  = Booking.objects.count()
+    bookings_7d     = Booking.objects.filter(booking_date__date__gte=last_7).count()
+
+    # Top 5 classes by booking
+    top_classes = GymClass.objects.annotate(bc=Count('booking')).order_by('-bc')[:5]
+
+    # Plan distribution
+    plan_dist = MembershipPlan.objects.annotate(
+        sub_count=Count('subscription', filter=__import__('django.db.models', fromlist=['Q']).Q(subscription__is_active=True))
+    )
+
+    # Monthly revenue (last 6 months)
+    monthly_labels  = []
+    monthly_revenue = []
+    for i in range(5, -1, -1):
+        from datetime import date
+        import calendar
+        target = today.replace(day=1) - timedelta(days=i * 28)
+        month_start = target.replace(day=1)
+        last_day    = calendar.monthrange(month_start.year, month_start.month)[1]
+        month_end   = month_start.replace(day=last_day)
+        rev = Payment.objects.filter(
+            timestamp__date__gte=month_start,
+            timestamp__date__lte=month_end,
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        monthly_labels.append(month_start.strftime('%b %Y'))
+        monthly_revenue.append(float(rev))
+
+    # Attendance last 7 days
+    att_labels  = []
+    att_counts  = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        count = Attendance.objects.filter(date=d, is_present=True).count()
+        att_labels.append(d.strftime('%a'))
+        att_counts.append(count)
+
+    context = {
+        'total_revenue'  : total_revenue,
+        'revenue_30d'    : revenue_30d,
+        'revenue_7d'     : revenue_7d,
+        'total_members'  : total_members,
+        'active_subs'    : active_subs,
+        'new_members_30d': new_members_30d,
+        'total_classes'  : total_classes,
+        'total_bookings' : total_bookings,
+        'bookings_7d'    : bookings_7d,
+        'top_classes'    : top_classes,
+        'plan_dist'      : plan_dist,
+        'monthly_labels' : monthly_labels,
+        'monthly_revenue': monthly_revenue,
+        'att_labels'     : att_labels,
+        'att_counts'     : att_counts,
+    }
+    return render(request, 'manage_reports.html', context)
+
+
+# ─────────────────────────────────────────────
+#  CLASS SCHEDULE / MANAGE CLASSES
+# ─────────────────────────────────────────────
+
+@login_required
+def manage_classes(request):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    classes = GymClass.objects.select_related('trainer').order_by('schedule_time')
+
+    # Filter by search
+    search = request.GET.get('q', '').strip()
+    if search:
+        classes = classes.filter(
+            models.Q(title__icontains=search) | 
+            models.Q(trainer__username__icontains=search)
+        )
+
+    # Trainers for the "Add Class" modal
+    trainers = User.objects.filter(profile__role='trainer')
+
+    context = {
+        'classes'      : classes,
+        'total_classes': classes.count(),
+        'trainers'     : trainers,
+        'search'       : search,
+    }
+    return render(request, 'manage_classes.html', context)
+
+
+@login_required
+def edit_class(request, class_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    
+    gym_class = GymClass.objects.get(id=class_id)
+    if request.method == 'POST':
+        gym_class.title         = request.POST.get('title', gym_class.title)
+        gym_class.description   = request.POST.get('description', gym_class.description)
+        gym_class.schedule_time = request.POST.get('schedule_time', gym_class.schedule_time)
+        gym_class.capacity      = request.POST.get('capacity', gym_class.capacity)
+        
+        trainer_id = request.POST.get('trainer')
+        if trainer_id:
+            gym_class.trainer = User.objects.get(id=trainer_id)
+            
+        gym_class.save()
+        messages.success(request, f"Class '{gym_class.title}' updated successfully!")
+    
+    return redirect('manage_classes')
+
+
+@login_required
+def delete_class(request, class_id):
+    if request.user.profile.role != 'admin':
+        return redirect('dashboard')
+    
+    gym_class = GymClass.objects.get(id=class_id)
+    title = gym_class.title
+    gym_class.delete()
+    messages.success(request, f"Class '{title}' has been removed from schedule.")
+    return redirect('manage_classes')
+
 
 def error_404(request, exception):
     return render(request, '404.html', status=404)
+
 
 
 # ─────────────────────────────────────────────
@@ -466,34 +837,6 @@ def delete_trainer(request, trainer_id):
     return redirect('manage_trainers')
 
 
-# ─────────────────────────────────────────────
-#  AI CHAT API  (no external key needed)
-# ─────────────────────────────────────────────
-
-from django.http import JsonResponse
-import json
-from django.views.decorators.csrf import csrf_exempt
-
-@login_required
-def ai_chat(request):
-    """Rule-based AI assistant that answers questions about gym data."""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST only'}, status=405)
-
-    data = json.loads(request.body)
-    query = data.get('message', '').lower().strip()
-
-    # ── gather live stats ──
-    total_members  = User.objects.filter(profile__role='member').count()
-    total_trainers = User.objects.filter(profile__role='trainer').count()
-    total_classes  = GymClass.objects.count()
-    total_bookings = Booking.objects.count()
-    total_revenue  = Payment.objects.aggregate(__import__('django.db.models', fromlist=['Sum']).Sum('amount'))['amount__sum'] or 0
-    active_subs    = Subscription.objects.filter(is_active=True).count()
-    at_risk        = User.objects.filter(profile__role='member').exclude(
-        attendance__is_present=True
-    ).distinct().count()
-
     # ── rule-based NLU ──
     reply = ""
 
@@ -570,3 +913,192 @@ def ai_chat(request):
         )
 
     return JsonResponse({'reply': reply})
+
+@login_required
+def membership_plans_view(request):
+    plans = MembershipPlan.objects.all()
+    active_sub = Subscription.objects.filter(user=request.user, is_active=True).first()
+    return render(request, 'membership_plans.html', {'plans': plans, 'active_sub': active_sub})
+
+@login_required
+def initiate_payment(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id)
+    promo_code = request.GET.get('promo_code')
+    discount = 0
+    final_price = plan.price
+    applied_offer = None
+
+    if promo_code:
+        offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
+        if offer:
+            discount = (plan.price * offer.discount_percentage) / 100
+            final_price = plan.price - discount
+            applied_offer = offer
+            messages.success(request, f"Promo code applied! You saved BDT {discount:,.2f} ({offer.discount_percentage}% off)")
+        else:
+            messages.error(request, "Invalid or expired promo code.")
+
+    context = {
+        'plan': plan,
+        'final_price': final_price,
+        'discount': discount,
+        'promo_code': promo_code,
+        'applied_offer': applied_offer
+    }
+    return render(request, 'initiate_payment.html', context)
+
+from .forms import OfflinePaymentForm
+
+@login_required
+def offline_payment(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id)
+    promo_code = request.GET.get('promo_code')
+    final_price = plan.price
+
+    if promo_code:
+        offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
+        if offer:
+            discount = (plan.price * offer.discount_percentage) / 100
+            final_price = plan.price - discount
+
+    if request.method == 'POST':
+        form = OfflinePaymentForm(request.POST, request.FILES)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.user = request.user
+            payment.plan = plan
+            payment.amount = final_price
+            payment.payment_method = 'offline'
+            payment.status = 'pending'
+            payment.save()
+            messages.success(request, f"Offline payment of BDT {final_price} submitted. Admin will verify and approve your enrollment shortly.")
+            return redirect('member_dashboard')
+    else:
+        form = OfflinePaymentForm()
+    return render(request, 'offline_payment.html', {'form': form, 'plan': plan, 'final_price': final_price})
+
+@login_required
+def online_payment(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id)
+    promo_code = request.GET.get('promo_code')
+    final_price = plan.price
+
+    if promo_code:
+        offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
+        if offer:
+            discount = (plan.price * offer.discount_percentage) / 100
+            final_price = plan.price - discount
+
+    # SSLCommerz Sandbox Credentials
+    store_id = 'fitne6638f2b7a9f7d'
+    store_pass = 'fitne6638f2b7a9f7d@ssl'
+    
+    tran_id = str(uuid.uuid4())[:10]
+    
+    # Save pending payment
+    Payment.objects.create(
+        user=request.user,
+        plan=plan,
+        amount=final_price,
+        transaction_id=tran_id,
+        payment_method='online',
+        status='pending'
+    )
+    
+    post_url = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php"
+    
+    # Absolute URLs for callbacks
+    domain = request.build_absolute_uri('/')[:-1]
+    
+    payload = {
+        'store_id': store_id,
+        'store_passwd': store_pass,
+        'total_amount': float(final_price),
+        'currency': 'BDT',
+        'tran_id': tran_id,
+        'success_url': f"{domain}/payment/success/",
+        'fail_url': f"{domain}/payment/fail/",
+        'cancel_url': f"{domain}/payment/cancel/",
+        'cus_name': request.user.username,
+        'cus_email': request.user.email or 'customer@example.com',
+        'cus_add1': 'Dhaka',
+        'cus_city': 'Dhaka',
+        'cus_country': 'Bangladesh',
+        'cus_phone': request.user.profile.phone or '01700000000',
+        'shipping_method': 'NO',
+        'product_name': plan.title,
+        'product_category': 'Membership',
+        'product_profile': 'general',
+    }
+    
+    try:
+        response = requests.post(post_url, data=payload)
+        result = response.json()
+        if result['status'] == 'SUCCESS':
+            return redirect(result['GatewayPageURL'])
+        else:
+            messages.error(request, f"Failed to initiate online payment: {result.get('failedreason', 'Unknown error')}")
+    except Exception as e:
+        messages.error(request, f"Payment Gateway Error: {str(e)}")
+        
+    return redirect('initiate_payment', plan_id=plan.id)
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == 'POST':
+        tran_id = request.POST.get('tran_id')
+        try:
+            payment = Payment.objects.get(transaction_id=tran_id)
+            payment.status = 'success'
+            payment.save()
+            
+            # Activate subscription
+            activate_subscription(payment.user, payment.plan)
+            
+            messages.success(request, f"Payment successful! You are now enrolled in {payment.plan.title}.")
+        except Payment.DoesNotExist:
+            messages.error(request, "Transaction not found.")
+            
+    return redirect('member_dashboard')
+
+@csrf_exempt
+def payment_fail(request):
+    messages.error(request, "Payment failed. Please try again.")
+    return redirect('member_dashboard')
+
+@login_required
+def approve_payment(request, payment_id):
+    if request.user.profile.role != 'admin':
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+        
+    payment = Payment.objects.get(id=payment_id)
+    payment.status = 'approved'
+    payment.save()
+    
+    # Activate subscription
+    activate_subscription(payment.user, payment.plan)
+    
+    messages.success(request, f"Payment for {payment.user.username} approved. Enrollment active.")
+    return redirect('manage_payments')
+
+def activate_subscription(user, plan):
+    from datetime import timedelta
+    from django.utils import timezone
+    
+    start_date = timezone.now().date()
+    if plan.duration_unit == 'days':
+        end_date = start_date + timedelta(days=plan.duration_months)
+    elif plan.duration_unit == 'years':
+        end_date = start_date + timedelta(days=plan.duration_months * 365)
+    else: # months
+        end_date = start_date + timedelta(days=plan.duration_months * 30)
+        
+    Subscription.objects.update_or_create(
+        user=user,
+        defaults={
+            'plan': plan,
+            'end_date': end_date,
+            'is_active': True
+        }
+    )

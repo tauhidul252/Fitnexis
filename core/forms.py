@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Profile
+from .models import Profile, Payment
 
 class SignupForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -19,3 +19,13 @@ class SignupForm(forms.ModelForm):
             profile.role = self.cleaned_data['role']
             profile.save()
         return user
+
+class OfflinePaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['bank_name', 'account_number', 'deposit_slip']
+        widgets = {
+            'bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Bank Name'}),
+            'account_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Account Number'}),
+            'deposit_slip': forms.FileInput(attrs={'class': 'form-control'}),
+        }

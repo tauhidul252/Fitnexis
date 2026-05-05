@@ -1,22 +1,11 @@
 """
 URL configuration for fitnexis project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
 from django.shortcuts import render
 from django.views.generic import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 from core.views import (
     home, login_view, signup_view, logout_view, forgot_password_view,
     dashboard, member_dashboard, trainer_dashboard, admin_dashboard,
@@ -24,7 +13,14 @@ from core.views import (
     add_plan, edit_plan, delete_plan,
     manage_members, add_member, edit_member, delete_member,
     manage_trainers, add_trainer, edit_trainer, delete_trainer,
-    ai_chat,
+    assign_class_to_trainer, remove_class_from_trainer,
+    manage_payments, delete_payment,
+    manage_plans,
+    manage_offers, add_offer, edit_offer, delete_offer,
+    manage_reports,
+    manage_classes, edit_class, delete_class,
+    membership_plans_view, initiate_payment, offline_payment, online_payment,
+    payment_success, payment_fail, approve_payment,
 )
 
 urlpatterns = [
@@ -42,6 +38,7 @@ urlpatterns = [
     path('update-progress/', update_progress, name='update_progress'),
     path('mark-attendance/<int:booking_id>/', mark_attendance, name='mark_attendance'),
     path('add-class/', add_class, name='add_class'),
+    # Plans (legacy)
     path('add-plan/', add_plan, name='add_plan'),
     path('edit-plan/<int:plan_id>/', edit_plan, name='edit_plan'),
     path('delete-plan/<int:plan_id>/', delete_plan, name='delete_plan'),
@@ -55,9 +52,37 @@ urlpatterns = [
     path('manage/trainers/add/', add_trainer, name='add_trainer'),
     path('manage/trainers/edit/<int:trainer_id>/', edit_trainer, name='edit_trainer'),
     path('manage/trainers/delete/<int:trainer_id>/', delete_trainer, name='delete_trainer'),
-    # AI Chat
-    path('ai/chat/', ai_chat, name='ai_chat'),
+    path('manage/trainers/<int:trainer_id>/assign-class/', assign_class_to_trainer, name='assign_class_to_trainer'),
+    path('manage/trainers/remove-class/<int:class_id>/', remove_class_from_trainer, name='remove_class_from_trainer'),
+    # Classes
+    path('manage/classes/', manage_classes, name='manage_classes'),
+    path('manage/classes/edit/<int:class_id>/', edit_class, name='edit_class'),
+    path('manage/classes/delete/<int:class_id>/', delete_class, name='delete_class'),
+    # Payments
+    path('manage/payments/', manage_payments, name='manage_payments'),
+    path('manage/payments/delete/<int:payment_id>/', delete_payment, name='delete_payment'),
+    # Membership Plans
+    path('manage/plans/', manage_plans, name='manage_plans'),
+    # Offers & Discounts
+    path('manage/offers/', manage_offers, name='manage_offers'),
+    path('manage/offers/add/', add_offer, name='add_offer'),
+    path('manage/offers/edit/<int:offer_id>/', edit_offer, name='edit_offer'),
+    path('manage/offers/delete/<int:offer_id>/', delete_offer, name='delete_offer'),
+    # Reports
+    path('manage/reports/', manage_reports, name='manage_reports'),
     path('404/', lambda r: render(r, '404.html'), name='test_404'),
+    # Payments
+    path('membership/', membership_plans_view, name='membership_plans'),
+    path('payment/initiate/<int:plan_id>/', initiate_payment, name='initiate_payment'),
+    path('payment/offline/<int:plan_id>/', offline_payment, name='offline_payment'),
+    path('payment/online/<int:plan_id>/', online_payment, name='online_payment'),
+    path('payment/success/', payment_success, name='payment_success'),
+    path('payment/fail/', payment_fail, name='payment_fail'),
+    path('payment/cancel/', payment_fail, name='payment_cancel'),
+    path('manage/payments/approve/<int:payment_id>/', approve_payment, name='approve_payment'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404 = 'core.views.error_404'

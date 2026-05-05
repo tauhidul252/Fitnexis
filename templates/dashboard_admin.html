@@ -13,14 +13,12 @@
                 <a href="{% url 'admin_dashboard' %}" class="active">Overview</a>
                 <a href="{% url 'manage_members' %}">Manage Members</a>
                 <a href="{% url 'manage_trainers' %}">Manage Trainers</a>
-                <a href="#payments">Payments</a>
-                <a href="#plans">Membership Plans</a>
-                <a href="#offers">Offers &amp; Discounts</a>
-                <a href="#reports">Reports</a>
+                <a href="{% url 'manage_classes' %}">Class Schedule</a>
+                <a href="{% url 'manage_payments' %}">Payments</a>
+                <a href="{% url 'manage_plans' %}">Membership Plans</a>
+                <a href="{% url 'manage_offers' %}">Offers &amp; Discounts</a>
+                <a href="{% url 'manage_reports' %}">Reports</a>
             </nav>
-            <div style="margin-top:2rem;">
-                <button onclick="toggleChat()" class="btn-primary" style="width:100%;font-size:0.85rem;">🤖 AI Assistant</button>
-            </div>
         </aside>
 
         <div class="dashboard-main">
@@ -271,82 +269,6 @@
             event.target.style.display = "none";
         }
     }
-</script>
-
-<!-- ─── AI CHATBOT BUBBLE ─── -->
-<div id="aiChatBubble" class="ai-bubble" onclick="toggleChat()">
-  <span class="ai-bubble-icon">🤖</span>
-  <span class="ai-bubble-label">AI Assistant</span>
-</div>
-
-<div id="aiChatPanel" class="ai-panel" style="display:none;">
-  <div class="ai-panel-header">
-    <span>🤖 Fitnexis AI</span>
-    <button onclick="toggleChat()" class="ai-close-btn">×</button>
-  </div>
-  <div class="ai-messages" id="aiMessages">
-    <div class="ai-msg bot">👋 Hi Admin! Ask me about members, trainers, revenue, classes, or get a full summary!</div>
-  </div>
-  <div class="ai-input-row">
-    <input type="text" id="aiInput" placeholder="e.g. Give me a summary..." onkeydown="if(event.key==='Enter') sendAI()">
-    <button onclick="sendAI()" class="ai-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-  </div>
-</div>
-
-<style>
-  .ai-bubble { position: fixed; bottom: 2rem; right: 2rem; background: linear-gradient(135deg, #f5b026, #e08c00); border-radius: 50px; padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; box-shadow: 0 8px 30px rgba(245,176,38,0.4); z-index: 999; transition: transform 0.2s; }
-  .ai-bubble:hover { transform: scale(1.05); }
-  .ai-bubble-icon { font-size: 1.3rem; }
-  .ai-bubble-label { font-weight: 800; color: #000; font-size: 0.9rem; }
-  .ai-panel { position: fixed; bottom: 5.5rem; right: 2rem; width: 360px; background: #111; border: 1px solid #2a2a2a; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 998; overflow: hidden; }
-  .ai-panel-header { background: linear-gradient(135deg, #1a1a1a, #222); padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1rem; border-bottom: 1px solid #222; }
-  .ai-close-btn { background: none; border: none; color: #888; font-size: 1.4rem; cursor: pointer; }
-  .ai-messages { height: 280px; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
-  .ai-msg { max-width: 85%; padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; }
-  .ai-msg.bot { background: rgba(245,176,38,0.1); border: 1px solid rgba(245,176,38,0.2); color: #ddd; align-self: flex-start; white-space: pre-wrap; }
-  .ai-msg.user { background: var(--accent); color: #000; align-self: flex-end; font-weight: 600; }
-  .ai-msg.typing { background: rgba(255,255,255,0.05); color: #888; align-self: flex-start; font-style: italic; }
-  .ai-input-row { display: flex; gap: 0.5rem; padding: 0.8rem 1rem; border-top: 1px solid #222; }
-  .ai-input-row input { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 0.6rem 0.9rem; font-size: 0.88rem; outline: none; }
-  .ai-input-row input:focus { border-color: var(--accent); }
-  .ai-send-btn { background: var(--accent); border: none; border-radius: 8px; color: #000; padding: 0.6rem 0.9rem; cursor: pointer; font-size: 0.9rem; }
-</style>
-
-<script>
-  function toggleChat() {
-    const panel = document.getElementById('aiChatPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  }
-
-  const CSRF = '{{ csrf_token }}';
-
-  async function sendAI() {
-    const input = document.getElementById('aiInput');
-    const msgs  = document.getElementById('aiMessages');
-    const text  = input.value.trim();
-    if (!text) return;
-    msgs.innerHTML += `<div class="ai-msg user">${text}</div>`;
-    input.value = '';
-    msgs.innerHTML += `<div class="ai-msg typing" id="typing">⏳ Thinking...</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-    try {
-      const res  = await fetch('/ai/chat/', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-        body   : JSON.stringify({ message: text }),
-      });
-      const data = await res.json();
-      document.getElementById('typing').remove();
-      const html = (data.reply || 'Sorry, no response.')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
-      msgs.innerHTML += `<div class="ai-msg bot">${html}</div>`;
-    } catch(e) {
-      document.getElementById('typing').remove();
-      msgs.innerHTML += `<div class="ai-msg bot" style="color:#ff6666;">⚠️ Error.</div>`;
-    }
-    msgs.scrollTop = msgs.scrollHeight;
-  }
 </script>
 {% endblock %}
 
