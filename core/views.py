@@ -989,9 +989,9 @@ def online_payment(request, plan_id):
             discount = (plan.price * offer.discount_percentage) / 100
             final_price = plan.price - discount
 
-    # SSLCommerz Sandbox Credentials
-    store_id = 'fitne6638f2b7a9f7d'
-    store_pass = 'fitne6638f2b7a9f7d@ssl'
+    # SSLCommerz Sandbox Test Credentials (Official: testbox / qwerty)
+    store_id = 'testbox'
+    store_pass = 'qwerty'
     
     tran_id = str(uuid.uuid4())[:10]
     
@@ -1019,13 +1019,18 @@ def online_payment(request, plan_id):
         'success_url': f"{domain}/payment/success/",
         'fail_url': f"{domain}/payment/fail/",
         'cancel_url': f"{domain}/payment/cancel/",
+        'emi_option': '0',
         'cus_name': request.user.username,
         'cus_email': request.user.email or 'customer@example.com',
-        'cus_add1': 'Dhaka',
+        'cus_add1': request.user.profile.address or 'Dhaka',
+        'cus_add2': 'Dhaka',
         'cus_city': 'Dhaka',
+        'cus_state': 'Dhaka',
+        'cus_postcode': '1000',
         'cus_country': 'Bangladesh',
         'cus_phone': request.user.profile.phone or '01700000000',
         'shipping_method': 'NO',
+        'num_of_item': 1,
         'product_name': plan.title,
         'product_category': 'Membership',
         'product_profile': 'general',
