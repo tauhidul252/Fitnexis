@@ -34,7 +34,7 @@
           <p class="plan-desc">{{ plan.description }}</p>
         </div>
         <div class="plan-card-actions">
-          <button onclick="openEditPlan('{{ plan.id }}','{{ plan.title }}','{{ plan.description }}','{{ plan.price }}','{{ plan.duration_months }}','{{ plan.duration_unit }}')" class="btn-icon edit"><i class="fa-solid fa-pen"></i></button>
+          <button onclick="openEditPlan('{{ plan.id }}','{{ plan.title }}','{{ plan.description }}','{{ plan.price }}','{{ plan.duration_months }}','{{ plan.duration_unit }}',{{ plan.has_trainer_access|yesno:'true,false' }})" class="btn-icon edit"><i class="fa-solid fa-pen"></i></button>
           <a href="javascript:void(0)" onclick="showDeleteConfirm('{% url 'delete_plan' plan.id %}','Delete plan &quot;{{ plan.title }}&quot;?')" class="btn-icon del"><i class="fa-solid fa-trash"></i></a>
         </div>
       </div>
@@ -42,6 +42,11 @@
         <span class="plan-price">${{ plan.price }}</span>
         <span class="plan-duration">/ {{ plan.duration_months }} {{ plan.get_duration_unit_display }}</span>
       </div>
+      {% if plan.has_trainer_access %}
+      <div style="font-size:0.75rem; color: var(--accent); margin-bottom: 0.3rem;">
+        <i class="fas fa-user-tie me-1"></i> Trainer Access Included
+      </div>
+      {% endif %}
       <div class="plan-sub-count">
         <i class="fa-solid fa-users"></i> {{ plan.subscriber_count }} subscriber{% if plan.subscriber_count != 1 %}s{% endif %}
       </div>
@@ -79,6 +84,12 @@
           </div>
         </div>
       </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer;">
+          <input type="checkbox" name="has_trainer_access" id="add_trainer_access" style="width:18px; height:18px; accent-color: var(--accent);">
+          <span>Include Trainer Access <small style="color:#888;">(Member can choose any trainer)</small></span>
+        </label>
+      </div>
       <button type="submit" class="btn-accent" style="width:100%;">Create Plan</button>
     </form>
   </div>
@@ -105,6 +116,12 @@
             </select>
           </div>
         </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer;">
+          <input type="checkbox" name="has_trainer_access" id="ep_trainer_access" style="width:18px; height:18px; accent-color: var(--accent);">
+          <span>Include Trainer Access <small style="color:#888;">(Member can choose any trainer)</small></span>
+        </label>
       </div>
       <button type="submit" class="btn-accent" style="width:100%;">Save Changes</button>
     </form>
@@ -169,13 +186,14 @@
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
   window.addEventListener('click', e => { if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('active'); });
 
-  function openEditPlan(id, title, desc, price, duration, unit) {
+  function openEditPlan(id, title, desc, price, duration, unit, hasTrainerAccess) {
     document.getElementById('editPlanForm').action = `/edit-plan/${id}/`;
     document.getElementById('ep_title').value    = title;
     document.getElementById('ep_desc').value     = desc;
     document.getElementById('ep_price').value    = price;
     document.getElementById('ep_duration').value = duration;
     document.getElementById('ep_unit').value     = unit || 'months';
+    document.getElementById('ep_trainer_access').checked = (hasTrainerAccess === true);
     openModal('editPlanModal');
   }
 

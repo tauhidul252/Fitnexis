@@ -5,7 +5,7 @@
 <section class="section-dark animate-fade" style="padding-top: 120px; min-height: 100vh; display: flex; align-items: center;">
     <div class="container" style="max-width: 900px; margin: 0 auto; width: 100%;">
         <div class="glass-card" style="padding: 2rem !important; max-width: 700px; margin: 0 auto;">
-            <div class="section-header-center" style="margin-bottom: 2rem;">
+            <div class="section-header-center" style="margin-bottom: 1.5rem;">
                 <h2 style="font-size: 1.8rem; margin-bottom: 0.3rem;">Payment Method</h2>
                 <p class="header-desc" style="font-size: 0.8rem;">
                     Plan: <span class="highlight fw-bold">{{ plan.title }}</span> | 
@@ -17,6 +17,19 @@
                     {% endif %}
                 </p>
             </div>
+
+            {% if selected_class %}
+            <div style="background: rgba(245,176,38,0.08); border: 1px solid rgba(245,176,38,0.3); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-check-circle" style="color: #22c55e; font-size: 1.2rem;"></i>
+                <div>
+                    <p style="margin: 0; font-size: 0.85rem; font-weight: 700;">Class Selected: {{ selected_class.title }}</p>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                        <i class="fas fa-calendar-alt me-1"></i>{{ selected_class.schedule_time|date:"D, M d, Y @ g:i A" }}
+                    </p>
+                </div>
+                <a href="{% url 'select_class' plan.id %}" style="margin-left: auto; font-size: 0.75rem; color: #ff6666;">Change &rarr;</a>
+            </div>
+            {% endif %}
 
             <!-- Messages -->
             {% if messages %}
@@ -56,7 +69,7 @@
                     </div>
                     <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; width: 100%;">Online Payment</h3>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2rem; width: 100%;">Bkash, Nagad, Card</p>
-                    <a href="{% url 'online_payment' plan.id %}{% if promo_code %}?promo_code={{ promo_code }}{% endif %}" class="btn-primary" style="width: 100%; text-align: center; padding: 0.6rem; font-size: 0.85rem;">Proceed Online</a>
+                    <a href="{% url 'online_payment' plan.id %}?{% if promo_code %}promo_code={{ promo_code }}&{% endif %}{% if class_id %}class_id={{ class_id }}{% endif %}" class="btn-primary" style="width: 100%; text-align: center; padding: 0.6rem; font-size: 0.85rem;">Proceed Online</a>
                 </div>
 
                 <!-- Offline -->
@@ -66,7 +79,7 @@
                     </div>
                     <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; width: 100%;">Bank Transfer</h3>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2rem; width: 100%;">Manual verification</p>
-                    <a href="{% url 'offline_payment' plan.id %}{% if promo_code %}?promo_code={{ promo_code }}{% endif %}" class="btn-outline" style="width: 100%; text-align: center; padding: 0.6rem; font-size: 0.85rem;">Pay Offline</a>
+                    <a href="{% url 'offline_payment' plan.id %}?{% if promo_code %}promo_code={{ promo_code }}&{% endif %}{% if class_id %}class_id={{ class_id }}{% endif %}" class="btn-outline" style="width: 100%; text-align: center; padding: 0.6rem; font-size: 0.85rem;">Pay Offline</a>
                 </div>
             </div>
 

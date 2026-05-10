@@ -20,7 +20,7 @@ from core.views import (
     manage_reports,
     manage_classes, edit_class, delete_class,
     membership_plans_view, initiate_payment, offline_payment, online_payment,
-    payment_success, payment_fail, approve_payment,
+    payment_success, payment_fail, approve_payment, select_class, select_trainer,
 )
 
 urlpatterns = [
@@ -73,6 +73,10 @@ urlpatterns = [
     path('404/', lambda r: render(r, '404.html'), name='test_404'),
     # Payments
     path('membership/', membership_plans_view, name='membership_plans'),
+    path('membership/select-trainer/<int:plan_id>/', select_trainer, name='select_trainer'),
+    path('membership/select-class/<int:plan_id>/', select_class, name='select_class'),
+    # Catch bare /payment/ URL - redirect to plans
+    path('payment/', lambda r: RedirectView.as_view(pattern_name='membership_plans', permanent=False)(r), name='payment_redirect'),
     path('payment/initiate/<int:plan_id>/', initiate_payment, name='initiate_payment'),
     path('payment/offline/<int:plan_id>/', offline_payment, name='offline_payment'),
     path('payment/online/<int:plan_id>/', online_payment, name='online_payment'),

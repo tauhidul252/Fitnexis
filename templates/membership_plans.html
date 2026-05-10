@@ -34,7 +34,11 @@
             {% if active_sub and active_sub.plan == plan %}
                 <button class="btn-primary" style="opacity: 0.7; cursor: default; width: 100%; padding: 0.5rem; font-size: 0.8rem;">Current Plan</button>
             {% else %}
-                <a href="{% url 'initiate_payment' plan.id %}" class="btn-primary" style="width: 100%; text-align: center; padding: 0.5rem; font-size: 0.8rem;">Get Started</a>
+                {% if plan.has_trainer_access %}
+                    <a href="{% url 'select_trainer' plan.id %}" class="btn-primary" style="width: 100%; text-align: center; padding: 0.5rem; font-size: 0.8rem;">Choose Trainer & Book</a>
+                {% else %}
+                    <a href="{% url 'initiate_payment' plan.id %}" class="btn-primary" style="width: 100%; text-align: center; padding: 0.5rem; font-size: 0.8rem;">Get Started</a>
+                {% endif %}
             {% endif %}
         </div>
         {% endfor %}

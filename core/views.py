@@ -71,36 +71,44 @@ from datetime import timedelta
 def member_dashboard(request):
     user = request.user
     progress = FitnessProgress.objects.filter(user=user).order_by('-date')[:5]
-    
-    # Only show future bookings
-    bookings = Booking.objects.filter(user=user, gym_class__schedule_time__gte=timezone.now()).order_by('gym_class__schedule_time')
-    
+
+    # Show all bookings, ordered by class time (upcoming first, then past)
+    bookings = Booking.objects.filter(user=user).order_by('gym_class__schedule_time').select_related('gym_class', 'gym_class__trainer')
+
+    # Separate upcoming and past
+    now = timezone.now()
+    upcoming_bookings = [b for b in bookings if b.gym_class.schedule_time >= now]
+    past_bookings = [b for b in bookings if b.gym_class.schedule_time < now]
+
     # Calculate attendance % (last 30 days)
     last_30_days = timezone.now().date() - timedelta(days=30)
     attendance_count = Attendance.objects.filter(user=user, date__gte=last_30_days, is_present=True).count()
-    # Simple logic: assume 20 possible gym days in 30 days for 100%
     attendance_pct = min(int((attendance_count / 20) * 100), 100)
-    
+
     # Current Plan (Active and Not Expired)
     active_sub = Subscription.objects.filter(
-        user=user, 
-        is_active=True, 
+        user=user,
+        is_active=True,
         end_date__gte=timezone.now().date()
     ).first()
-    
-    # Next Class
-    next_booking = bookings.first()
-    
-    # Available Classes to book
-    available_classes = GymClass.objects.filter(schedule_time__gte=timezone.now()).exclude(booking__user=user)[:6]
+
+    # Next upcoming class
+    next_booking = upcoming_bookings[0] if upcoming_bookings else (past_bookings[-1] if past_bookings else None)
+
+    # Available Classes to book (all classes not yet booked by user)
+    booked_class_ids = bookings.values_list('gym_class__id', flat=True)
+    available_classes = GymClass.objects.exclude(id__in=booked_class_ids).order_by('schedule_time')[:6]
 
     context = {
         'progress': progress,
         'bookings': bookings,
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings,
         'attendance_pct': attendance_pct,
         'active_sub': active_sub,
         'next_booking': next_booking,
         'available_classes': available_classes,
+        'now': now,
     }
     return render(request, 'dashboard_member.html', context)
 
@@ -285,13 +293,15 @@ def add_plan(request):
         price = request.POST.get('price')
         duration_months = request.POST.get('duration_months', 1)
         duration_unit = request.POST.get('duration_unit', 'months')
-        
+        has_trainer_access = request.POST.get('has_trainer_access') == 'on'
+
         MembershipPlan.objects.create(
             title=title,
             description=description,
             price=price,
             duration_months=duration_months,
-            duration_unit=duration_unit
+            duration_unit=duration_unit,
+            has_trainer_access=has_trainer_access
         )
         messages.success(request, f"Plan '{title}' created successfully!")
     return redirect('manage_plans')
@@ -310,6 +320,7 @@ def edit_plan(request, plan_id):
         plan.price = request.POST.get('price')
         plan.duration_months = request.POST.get('duration_months')
         plan.duration_unit = request.POST.get('duration_unit', 'months')
+        plan.has_trainer_access = request.POST.get('has_trainer_access') == 'on'
         plan.save()
         messages.success(request, f"Plan '{plan.title}' updated successfully!")
     return redirect('manage_plans')
@@ -387,12 +398,15 @@ def manage_plans(request):
     from django.db.models import Count
     plans = MembershipPlan.objects.annotate(
         subscriber_count=Count('subscription', distinct=True)
-    )
+    ).select_related('trainer')
+
+    trainers = User.objects.filter(profile__role='trainer')
 
     context = {
         'plans'      : plans,
         'total_plans': plans.count(),
         'total_subs' : Subscription.objects.filter(is_active=True).count(),
+        'trainers'   : trainers,
     }
     return render(request, 'manage_plans.html', context)
 
@@ -921,12 +935,74 @@ def membership_plans_view(request):
     return render(request, 'membership_plans.html', {'plans': plans, 'active_sub': active_sub})
 
 @login_required
+def select_trainer(request, plan_id):
+    """Step 1: Show all trainers with their class counts for plans with trainer access."""
+    plan = MembershipPlan.objects.get(id=plan_id)
+
+    if not plan.has_trainer_access:
+        return redirect('initiate_payment', plan_id=plan.id)
+
+    trainers = User.objects.filter(profile__role='trainer').select_related('profile')
+    trainer_data = []
+    for t in trainers:
+        classes = GymClass.objects.filter(trainer=t)
+        upcoming = classes.filter(schedule_time__gte=timezone.now()).count()
+        trainer_data.append({
+            'trainer': t,
+            'total_classes': classes.count(),
+            'upcoming_classes': upcoming,
+        })
+
+    context = {
+        'plan': plan,
+        'trainer_data': trainer_data,
+    }
+    return render(request, 'select_trainer.html', context)
+
+@login_required
+def select_class(request, plan_id):
+    """Step 2: Show classes for the selected trainer."""
+    plan = MembershipPlan.objects.get(id=plan_id)
+    trainer_id = request.GET.get('trainer_id')
+    classes_with_seats = []
+    selected_trainer = None
+
+    if not plan.has_trainer_access:
+        return redirect('initiate_payment', plan_id=plan.id)
+
+    if trainer_id:
+        selected_trainer = User.objects.filter(id=trainer_id, profile__role='trainer').first()
+        if selected_trainer:
+            classes = GymClass.objects.filter(trainer=selected_trainer).order_by('schedule_time')
+            for c in classes:
+                booked = Booking.objects.filter(gym_class=c).count()
+                available = c.capacity - booked
+                classes_with_seats.append({
+                    'class': c,
+                    'available_seats': available,
+                    'is_full': available <= 0,
+                })
+
+    context = {
+        'plan': plan,
+        'selected_trainer': selected_trainer,
+        'classes_with_seats': classes_with_seats,
+        'trainer_id': trainer_id,
+    }
+    return render(request, 'select_class.html', context)
+
+@login_required
 def initiate_payment(request, plan_id):
     plan = MembershipPlan.objects.get(id=plan_id)
     promo_code = request.GET.get('promo_code')
+    class_id = request.GET.get('class_id')
     discount = 0
     final_price = plan.price
     applied_offer = None
+    selected_class = None
+
+    if class_id:
+        selected_class = GymClass.objects.filter(id=class_id).first()
 
     if promo_code:
         offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
@@ -943,7 +1019,9 @@ def initiate_payment(request, plan_id):
         'final_price': final_price,
         'discount': discount,
         'promo_code': promo_code,
-        'applied_offer': applied_offer
+        'applied_offer': applied_offer,
+        'selected_class': selected_class,
+        'class_id': class_id,
     }
     return render(request, 'initiate_payment.html', context)
 
@@ -953,7 +1031,9 @@ from .forms import OfflinePaymentForm
 def offline_payment(request, plan_id):
     plan = MembershipPlan.objects.get(id=plan_id)
     promo_code = request.GET.get('promo_code')
+    class_id = request.GET.get('class_id')
     final_price = plan.price
+    booked_class = GymClass.objects.filter(id=class_id).first() if class_id else None
 
     if promo_code:
         offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
@@ -970,18 +1050,21 @@ def offline_payment(request, plan_id):
             payment.amount = final_price
             payment.payment_method = 'offline'
             payment.status = 'pending'
+            payment.booked_class = booked_class
             payment.save()
             messages.success(request, f"Offline payment of BDT {final_price} submitted. Admin will verify and approve your enrollment shortly.")
             return redirect('member_dashboard')
     else:
         form = OfflinePaymentForm()
-    return render(request, 'offline_payment.html', {'form': form, 'plan': plan, 'final_price': final_price})
+    return render(request, 'offline_payment.html', {'form': form, 'plan': plan, 'final_price': final_price, 'booked_class': booked_class})
 
 @login_required
 def online_payment(request, plan_id):
     plan = MembershipPlan.objects.get(id=plan_id)
     promo_code = request.GET.get('promo_code')
+    class_id = request.GET.get('class_id')
     final_price = plan.price
+    booked_class = GymClass.objects.filter(id=class_id).first() if class_id else None
 
     if promo_code:
         offer = Offer.objects.filter(promo_code__iexact=promo_code, expiry_date__gte=timezone.now().date()).first()
@@ -1000,6 +1083,7 @@ def online_payment(request, plan_id):
         user=request.user,
         plan=plan,
         amount=final_price,
+        booked_class=booked_class,
         transaction_id=tran_id,
         payment_method='online',
         status='pending'
@@ -1056,14 +1140,24 @@ def payment_success(request):
             payment = Payment.objects.get(transaction_id=tran_id)
             payment.status = 'success'
             payment.save()
-            
+
             # Activate subscription
             activate_subscription(payment.user, payment.plan)
-            
-            messages.success(request, f"Payment successful! You are now enrolled in {payment.plan.title}.")
+
+            # Auto-book the selected class if one was chosen
+            if payment.booked_class:
+                gym_class = payment.booked_class
+                current_bookings = Booking.objects.filter(gym_class=gym_class).count()
+                if current_bookings < gym_class.capacity:
+                    Booking.objects.get_or_create(user=payment.user, gym_class=gym_class)
+                    messages.success(request, f"Payment successful! You are enrolled in {payment.plan.title} and booked into '{gym_class.title}' on {gym_class.schedule_time.strftime('%b %d @ %I:%M %p')}.")
+                else:
+                    messages.warning(request, f"Payment successful! However, '{gym_class.title}' is now full. Please book another class from your dashboard.")
+            else:
+                messages.success(request, f"Payment successful! You are now enrolled in {payment.plan.title}.")
         except Payment.DoesNotExist:
             messages.error(request, "Transaction not found.")
-            
+
     return redirect('member_dashboard')
 
 @csrf_exempt

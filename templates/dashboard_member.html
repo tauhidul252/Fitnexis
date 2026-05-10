@@ -30,17 +30,23 @@
                     <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.1s;">
                         <h4>Current Plan</h4>
                         <p class="stat-value">{{ active_sub.plan.title|default:"No Plan" }}</p>
-                        <p class="stat-sub">{% if active_sub %}Expires: {{ active_sub.end_date }}{% else %}Join now!{% endif %}</p>
+                        <p class="stat-sub">{% if active_sub %}Expires: {{ active_sub.end_date }}{% else %}<a href="{% url 'membership_plans' %}" style="color:var(--accent);">Join now!</a>{% endif %}</p>
                     </div>
                     <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.2s;">
                         <h4>Attendance</h4>
                         <p class="stat-value">{{ attendance_pct }}%</p>
                         <p class="stat-sub">Last 30 days</p>
                     </div>
-                    <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.3s;">
-                        <h4>Next Class</h4>
-                        <p class="stat-value">{{ next_booking.gym_class.title|default:"None" }}</p>
-                        <p class="stat-sub">{% if next_booking %}{{ next_booking.gym_class.schedule_time|date:"D @ g:i A" }}{% else %}No upcoming classes{% endif %}</p>
+                    <div class="stat-card glass-card hover-glow animate-fade" style="animation-delay: 0.3s;" onclick="showSection('classes', document.querySelector('[onclick*=classes]'))" style="cursor:pointer;">
+                        <h4>Booked Classes</h4>
+                        <p class="stat-value">{{ bookings|length }}</p>
+                        <p class="stat-sub">
+                            {% if next_booking %}
+                                {{ next_booking.gym_class.title }} — {{ next_booking.gym_class.schedule_time|date:"M d @ g:i A" }}
+                            {% else %}
+                                No classes booked
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -72,39 +78,69 @@
             <!-- SECTION: CLASSES -->
             <div id="section-classes" class="dash-section" style="display: none;">
                 <header class="dash-header">
-                    <h2>Manage Classes</h2>
-                    <p>View your upcoming schedule and book new sessions.</p>
+                    <h2>My Classes</h2>
+                    <p>View your booked sessions and discover new classes.</p>
                 </header>
-                <div class="content-grid" style="margin-top: 1.5rem;">
-                    <div class="content-card">
-                        <h3>Upcoming Classes</h3>
-                        <div class="booking-list">
-                            {% for booking in bookings %}
-                            <div class="booking-item">
-                                <h4>{{ booking.gym_class.title }}</h4>
-                                <p>{{ booking.gym_class.schedule_time|date:"M d, g:i A" }}</p>
-                            </div>
-                            {% empty %}
-                            <p>No upcoming classes.</p>
-                            {% endfor %}
-                        </div>
-                    </div>
 
-                    <div class="content-card">
-                        <h3>Available Classes</h3>
-                        <div class="available-classes-grid" style="display: flex; flex-direction: column; gap: 1rem;">
-                            {% for class in available_classes %}
-                            <div class="class-card">
-                                <div class="class-info">
-                                    <h4>{{ class.title }}</h4>
-                                    <p>{{ class.trainer.username }} | {{ class.schedule_time|date:"D @ g:i A" }}</p>
-                                </div>
-                                <a href="{% url 'book_class' class.id %}" class="btn-book" style="margin-left: 1rem;">Book</a>
+                <!-- My Bookings -->
+                <div class="content-card" style="margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0;">My Booked Classes</h3>
+                        <span style="font-size: 0.75rem; color: #888;">{{ bookings|length }} total</span>
+                    </div>
+                    <div class="booking-list">
+                        {% for booking in upcoming_bookings %}
+                        <div class="booking-item" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                            <div>
+                                <h4 style="margin-bottom: 0.2rem;">{{ booking.gym_class.title }}</h4>
+                                <p style="margin: 0; font-size: 0.78rem; color: #888;">
+                                    <i class="fas fa-user-tie me-1"></i>{{ booking.gym_class.trainer.username|capfirst }}
+                                    &nbsp;|&nbsp;
+                                    <i class="fas fa-calendar-alt me-1"></i>{{ booking.gym_class.schedule_time|date:"D, M d, Y @ g:i A" }}
+                                </p>
                             </div>
-                            {% empty %}
-                            <p>No classes available for booking right now.</p>
-                            {% endfor %}
+                            <span style="background: rgba(34,197,94,0.12); color: #22c55e; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; white-space: nowrap;">Upcoming</span>
                         </div>
+                        {% endfor %}
+                        {% for booking in past_bookings %}
+                        <div class="booking-item" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; opacity: 0.7;">
+                            <div>
+                                <h4 style="margin-bottom: 0.2rem;">{{ booking.gym_class.title }}</h4>
+                                <p style="margin: 0; font-size: 0.78rem; color: #888;">
+                                    <i class="fas fa-user-tie me-1"></i>{{ booking.gym_class.trainer.username|capfirst }}
+                                    &nbsp;|&nbsp;
+                                    <i class="fas fa-calendar-check me-1"></i>{{ booking.gym_class.schedule_time|date:"D, M d, Y @ g:i A" }}
+                                </p>
+                            </div>
+                            <span style="background: rgba(100,100,100,0.15); color: #888; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; white-space: nowrap;">Completed</span>
+                        </div>
+                        {% empty %}
+                        {% endfor %}
+                        {% if not bookings %}
+                        <p style="color: #666; text-align: center; padding: 1rem 0;">No classes booked yet. <a href="{% url 'membership_plans' %}" style="color: var(--accent);">Buy a plan</a> to get started!</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Available Classes -->
+                <div class="content-card" style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Book More Classes</h3>
+                    <div class="available-classes-grid" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        {% for class in available_classes %}
+                        <div class="class-card" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; background: rgba(255,255,255,0.02); border: 1px solid #2a2a2a; border-radius: 10px;">
+                            <div class="class-info">
+                                <h4 style="margin-bottom: 0.2rem; font-size: 0.95rem;">{{ class.title }}</h4>
+                                <p style="margin: 0; font-size: 0.75rem; color: #888;">
+                                    <i class="fas fa-user-tie me-1"></i>{{ class.trainer.username|capfirst }}
+                                    &nbsp;|&nbsp;
+                                    <i class="fas fa-calendar-alt me-1"></i>{{ class.schedule_time|date:"D, M d @ g:i A" }}
+                                </p>
+                            </div>
+                            <a href="{% url 'book_class' class.id %}" class="btn-book" style="margin-left: 1rem; flex-shrink: 0;">Book</a>
+                        </div>
+                        {% empty %}
+                        <p style="color: #666; text-align: center; padding: 1rem 0;">All available classes have been booked.</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

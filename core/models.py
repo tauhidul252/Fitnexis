@@ -27,9 +27,10 @@ class MembershipPlan(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    duration_months = models.IntegerField(default=1) # Keeping this for compatibility or as 'value'
+    duration_months = models.IntegerField(default=1)
     duration_unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='months')
-    
+    has_trainer_access = models.BooleanField(default=False, help_text="If true, member can select any trainer and class")
+
     def __str__(self):
         return f"{self.title} ({self.duration_months} {self.duration_unit})"
 
@@ -70,7 +71,10 @@ class Payment(models.Model):
     bank_name = models.CharField(max_length=100, blank=True, null=True)
     account_number = models.CharField(max_length=50, blank=True, null=True)
     deposit_slip = models.ImageField(upload_to='slips/', blank=True, null=True)
-    
+
+    # Class booking linked to payment
+    booked_class = models.ForeignKey('GymClass', on_delete=models.SET_NULL, null=True, blank=True)
+
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
