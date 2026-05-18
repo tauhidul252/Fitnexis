@@ -398,7 +398,7 @@ def manage_plans(request):
     from django.db.models import Count
     plans = MembershipPlan.objects.annotate(
         subscriber_count=Count('subscription', distinct=True)
-    ).select_related('trainer')
+    )
 
     trainers = User.objects.filter(profile__role='trainer')
 

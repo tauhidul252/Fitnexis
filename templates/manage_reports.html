@@ -3,7 +3,10 @@
 
 {% block content %}
 <section class="section-dark" style="padding-top:100px;min-height:100vh;">
-<div class="pg-wrap">
+  <div class="dashboard-container">
+    {% include 'admin_sidebar.html' %}
+
+    <div class="dashboard-main">
 
   <div class="pg-header">
     <div>
@@ -88,7 +91,8 @@
 
   </div>
 
-</div>
+    </div>
+  </div>
 </section>
 
 <!-- Chart.js -->

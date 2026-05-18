@@ -361,3 +361,17 @@ footer { background: #000; padding: 4rem 10% 0; }
     box-shadow: 0 0 20px rgba(245, 176, 38, 0.3);
     border-color: var(--accent);
 }
+
+/* Administrative Dashboard & Sidebar Styles */
+.dashboard-container { display: grid; grid-template-columns: 250px 1fr; gap: 2rem; min-height: 80vh; }
+.sidebar { background: var(--bg-dark-secondary); border-radius: 12px; padding: 2rem; border: 1px solid #333; height: fit-content; }
+.user-info { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #333; }
+.role-badge { background: var(--accent); color: #000; display: inline-block; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-top: 0.5rem; }
+.side-nav { display: flex; flex-direction: column; gap: 0.5rem; }
+.side-nav a { padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-decoration: none; display: block; transition: all 0.3s; }
+.side-nav a.active, .side-nav a:hover { background: rgba(245, 176, 38, 0.1); color: var(--accent); }
+
+@media (max-width: 900px) {
+    .dashboard-container { grid-template-columns: 1fr; }
+}
+
