@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+ {% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
@@ -55,13 +55,26 @@
                         <div class="schedule-list">
                             {% for class in classes %}
                             <div class="schedule-item">
-                                <div>
-                                    <h4 class="text-white">{{ class.title }}</h4>
-                                    <p>{{ class.description|truncatewords:10 }}</p>
+                                <div style="display:flex; gap:1rem; align-items:center;">
+                                    {% if class.image %}
+                                    <img src="{{ class.image.url }}" alt="{{ class.title }}" style="width:72px; height:56px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                                    {% endif %}
+                                    <div>
+                                        <h4 class="text-white">{{ class.title }}</h4>
+                                        <p>{{ class.description|truncatewords:10 }}</p>
+                                    </div>
                                 </div>
-                                <div style="text-align: right;">
-                                    <p class="highlight">{{ class.schedule_time|date:"M d, g:i A" }}</p>
-                                    <p>{{ class.capacity }} Spots</p>
+                                <div style="text-align: right; display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end;">
+                                    <div>
+                                        <p class="highlight" style="margin:0">{{ class.schedule_time|date:"M d, g:i A" }}</p>
+                                        <p style="margin:0">{{ class.capacity }} Spots</p>
+                                    </div>
+                                    <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
+                                        {% if class.trainer == request.user or request.user.profile.role == 'admin' %}
+                                        <button class="btn-small" onclick="openEditModal({{ class.id }}, '{{ class.title|escapejs }}', '{{ class.description|escapejs }}', '{{ class.schedule_time|date:"Y-m-d\\TH:i" }}', '{{ class.capacity }}')">Edit</button>
+                                        <a href="{% url 'delete_class' class.id %}" class="btn-small" style="background:#e74c3c; color:#fff;" onclick="return confirm('Delete this class?');">Delete</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% empty %}
@@ -245,7 +258,7 @@
     <div class="modal-content">
         <span class="close" onclick="toggleModal('addClassModal')">&times;</span>
         <h3 class="text-white" style="margin-bottom: 1.5rem;"><i class="fas fa-plus text-accent me-2"></i>Schedule New Class</h3>
-        <form action="{% url 'add_class' %}" method="POST">
+        <form action="{% url 'add_class' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
                 <label>Class Title</label>
@@ -263,7 +276,43 @@
                 <label>Capacity</label>
                 <input type="number" name="capacity" value="20" required>
             </div>
+            <div class="form-group">
+                <label>Image (optional)</label>
+                <input type="file" name="image" accept="image/*">
+            </div>
             <button type="submit" class="btn-primary">Create Class</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Class Modal -->
+<div id="editClassModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal('editClassModal')">&times;</span>
+        <h3 class="text-white" style="margin-bottom: 1.5rem;"><i class="fas fa-edit text-accent me-2"></i>Edit Class</h3>
+        <form id="editClassForm" action="" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Class Title</label>
+                <input id="edit_title" type="text" name="title" required placeholder="e.g. Yoga Flow">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="edit_description" name="description" placeholder="What will be covered?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Schedule Time</label>
+                <input id="edit_schedule_time" type="datetime-local" name="schedule_time" required>
+            </div>
+            <div class="form-group">
+                <label>Capacity</label>
+                <input id="edit_capacity" type="number" name="capacity" value="20" required>
+            </div>
+            <div class="form-group">
+                <label>Replace Image (optional)</label>
+                <input type="file" name="image" accept="image/*">
+            </div>
+            <button type="submit" class="btn-primary">Save Changes</button>
         </form>
     </div>
 </div>
@@ -740,5 +789,17 @@
             }
         }
     });
+
+    // Open edit modal and populate fields
+    function openEditModal(id, title, description, scheduleTime, capacity) {
+        const modal = document.getElementById('editClassModal');
+        const form = document.getElementById('editClassForm');
+        form.action = '/manage/classes/edit/' + id + '/';
+        document.getElementById('edit_title').value = title || '';
+        document.getElementById('edit_description').value = description || '';
+        document.getElementById('edit_schedule_time').value = scheduleTime || '';
+        document.getElementById('edit_capacity').value = capacity || 20;
+        modal.style.display = 'block';
+    }
 </script>
 {% endblock %}
