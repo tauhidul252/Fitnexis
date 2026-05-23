@@ -148,10 +148,31 @@ def update_progress(request):
 @login_required
 def trainer_dashboard(request):
     user = request.user
+    if request.user.profile.role != 'trainer':
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        profile = user.profile
+        profile.phone = request.POST.get('phone', profile.phone)
+        profile.bio = request.POST.get('bio', profile.bio)
+        profile.save()
+        messages.success(request, "Your profile has been successfully updated!")
+        return redirect('trainer_dashboard')
+
     classes = GymClass.objects.filter(trainer=user).order_by('schedule_time')
     
     # Unique members who booked this trainer's classes
-    assigned_members_count = Booking.objects.filter(gym_class__trainer=user).values('user').distinct().count()
+    assigned_member_ids = Booking.objects.filter(gym_class__trainer=user).values_list('user_id', flat=True).distinct()
+    assigned_members = User.objects.filter(id__in=assigned_member_ids).select_related('profile')
+    assigned_members_count = assigned_members.count()
+    
+    # Member progress updates
+    member_progress = FitnessProgress.objects.filter(user__in=assigned_member_ids).order_by('-date')[:15]
     
     # Next session
     next_session = classes.filter(schedule_time__gte=timezone.now()).first()
@@ -164,6 +185,8 @@ def trainer_dashboard(request):
     context = {
         'classes': classes,
         'assigned_members_count': assigned_members_count,
+        'assigned_members': assigned_members,
+        'member_progress': member_progress,
         'next_session': next_session,
         'todays_bookings': todays_bookings,
     }
