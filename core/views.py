@@ -148,10 +148,31 @@ def update_progress(request):
 @login_required
 def trainer_dashboard(request):
     user = request.user
+    if request.user.profile.role != 'trainer':
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        profile = user.profile
+        profile.phone = request.POST.get('phone', profile.phone)
+        profile.bio = request.POST.get('bio', profile.bio)
+        profile.save()
+        messages.success(request, "Your profile has been successfully updated!")
+        return redirect('trainer_dashboard')
+
     classes = GymClass.objects.filter(trainer=user).order_by('schedule_time')
     
     # Unique members who booked this trainer's classes
-    assigned_members_count = Booking.objects.filter(gym_class__trainer=user).values('user').distinct().count()
+    assigned_member_ids = Booking.objects.filter(gym_class__trainer=user).values_list('user_id', flat=True).distinct()
+    assigned_members = User.objects.filter(id__in=assigned_member_ids).select_related('profile')
+    assigned_members_count = assigned_members.count()
+    
+    # Member progress updates
+    member_progress = FitnessProgress.objects.filter(user__in=assigned_member_ids).order_by('-date')[:15]
     
     # Next session
     next_session = classes.filter(schedule_time__gte=timezone.now()).first()
@@ -164,6 +185,8 @@ def trainer_dashboard(request):
     context = {
         'classes': classes,
         'assigned_members_count': assigned_members_count,
+        'assigned_members': assigned_members,
+        'member_progress': member_progress,
         'next_session': next_session,
         'todays_bookings': todays_bookings,
     }
@@ -196,13 +219,15 @@ def add_class(request):
         description = request.POST.get('description')
         schedule_time = request.POST.get('schedule_time')
         capacity = request.POST.get('capacity', 20)
+        image = request.FILES.get('image')
         
         GymClass.objects.create(
             title=title,
             description=description,
             schedule_time=schedule_time,
             capacity=capacity,
-            trainer=request.user
+            trainer=request.user,
+            image=image
         )
         messages.success(request, f"Class '{title}' created successfully!")
     return redirect('trainer_dashboard')
@@ -222,6 +247,7 @@ def assign_class_to_trainer(request, trainer_id):
         description   = request.POST.get('description', '')
         schedule_time = request.POST.get('schedule_time')
         capacity      = request.POST.get('capacity', 20)
+        image         = request.FILES.get('image')
 
         if not title or not schedule_time:
             messages.error(request, "Title and schedule time are required.")
@@ -233,6 +259,7 @@ def assign_class_to_trainer(request, trainer_id):
             schedule_time=schedule_time,
             capacity=capacity,
             trainer=trainer,
+            image=image
         )
         messages.success(request, f"Class '{title}' assigned to {trainer.username}!")
 
@@ -597,48 +624,58 @@ def manage_classes(request):
 
     # Trainers for the "Add Class" modal
     trainers = User.objects.filter(profile__role='trainer')
-
+    
     context = {
-        'classes'      : classes,
+        'classes': classes,
         'total_classes': classes.count(),
-        'trainers'     : trainers,
-        'search'       : search,
+        'trainers': trainers,
+        'search': search,
     }
     return render(request, 'manage_classes.html', context)
 
 
 @login_required
 def edit_class(request, class_id):
-    if request.user.profile.role != 'admin':
-        return redirect('dashboard')
-    
+    # Allow admins to edit any class, and trainers to edit their own classes
     gym_class = GymClass.objects.get(id=class_id)
+    is_admin = request.user.profile.role == 'admin'
+    is_owner_trainer = request.user.profile.role == 'trainer' and gym_class.trainer == request.user
+    if not (is_admin or is_owner_trainer):
+        return redirect('dashboard')
+
     if request.method == 'POST':
-        gym_class.title         = request.POST.get('title', gym_class.title)
-        gym_class.description   = request.POST.get('description', gym_class.description)
-        gym_class.schedule_time = request.POST.get('schedule_time', gym_class.schedule_time)
-        gym_class.capacity      = request.POST.get('capacity', gym_class.capacity)
-        
+        gym_class.title = request.POST.get('title', gym_class.title)
+        gym_class.description = request.POST.get('description', gym_class.description)
+        # Handle optional image upload
+        image = request.FILES.get('image')
+        if image:
+            gym_class.image = image
+        # Retrieve trainer assignment if provided (only admins should change trainer)
         trainer_id = request.POST.get('trainer')
-        if trainer_id:
+        if trainer_id and is_admin:
             gym_class.trainer = User.objects.get(id=trainer_id)
-            
+        gym_class.schedule_time = request.POST.get('schedule_time', gym_class.schedule_time)
+        gym_class.capacity = request.POST.get('capacity', gym_class.capacity)
         gym_class.save()
         messages.success(request, f"Class '{gym_class.title}' updated successfully!")
-    
-    return redirect('manage_classes')
+
+    # Redirect trainers back to their dashboard, admins to manage page
+    return redirect('trainer_dashboard' if is_owner_trainer and not is_admin else 'manage_classes')
 
 
 @login_required
 def delete_class(request, class_id):
-    if request.user.profile.role != 'admin':
-        return redirect('dashboard')
-    
+    # Allow admins to delete any class, and trainers to delete their own classes
     gym_class = GymClass.objects.get(id=class_id)
+    is_admin = request.user.profile.role == 'admin'
+    is_owner_trainer = request.user.profile.role == 'trainer' and gym_class.trainer == request.user
+    if not (is_admin or is_owner_trainer):
+        return redirect('dashboard')
+
     title = gym_class.title
     gym_class.delete()
     messages.success(request, f"Class '{title}' has been removed from schedule.")
-    return redirect('manage_classes')
+    return redirect('trainer_dashboard' if is_owner_trainer and not is_admin else 'manage_classes')
 
 
 def error_404(request, exception):

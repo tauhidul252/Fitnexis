@@ -86,6 +86,7 @@ class GymClass(models.Model):
     schedule_time = models.DateTimeField()
     capacity = models.IntegerField(default=20)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='classes/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} by {self.trainer.username}"
