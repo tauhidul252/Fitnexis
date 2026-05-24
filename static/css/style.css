@@ -128,12 +128,18 @@ a { text-decoration: none; color: inherit; transition: all 0.3s; }
 
 /* Classes We Provide */
 .class-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-.class-card { background: var(--bg-dark-secondary); border: 1px solid #333; text-align: center; }
-.card-img { width: 100%; height: 350px; object-fit: cover; }
+.class-card { background: var(--bg-dark-secondary); border: 1px solid #333; text-align: center; border-radius: 8px; overflow: hidden; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; }
+.class-card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(245, 176, 38, 0.15); }
+.card-img { width: 100%; height: 220px; object-fit: cover; }
 .card-content { padding: 1.5rem; }
-.card-content h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
-.card-content p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
-.card-bottom-line { width: 40px; height: 3px; background: var(--accent); margin: 0 auto; }
+.card-content h3 { font-size: 1.1rem; margin-bottom: 0.8rem; }
+.class-meta-row { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.class-duration-badge { background: rgba(245,176,38,0.15); color: var(--accent); border: 1px solid rgba(245,176,38,0.3); padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+.class-trainer-badge { background: rgba(255,255,255,0.06); color: #ccc; border: 1px solid #333; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.78rem; }
+.class-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.5rem; min-height: 48px; }
+.card-bottom-line { width: 40px; height: 3px; background: var(--accent); margin: 0.8rem auto; }
+.btn-details { display: inline-block; margin-top: 0.6rem; background: transparent; color: var(--accent); border: 2px solid var(--accent); padding: 0.45rem 1.2rem; border-radius: 4px; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s; }
+.btn-details:hover { background: var(--accent); color: #000; }
 .pagination { display: flex; justify-content: center; gap: 1rem; margin-top: 3rem; font-weight: 700; color: var(--text-muted); }
 .pagination .active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 

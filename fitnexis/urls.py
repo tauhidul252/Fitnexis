@@ -18,7 +18,7 @@ from core.views import (
     manage_plans,
     manage_offers, add_offer, edit_offer, delete_offer,
     manage_reports,
-    manage_classes, edit_class, delete_class,
+    manage_classes, edit_class, delete_class, class_detail,
     membership_plans_view, initiate_payment, offline_payment, online_payment,
     payment_success, payment_fail, approve_payment, select_class, select_trainer,
 )
@@ -58,6 +58,7 @@ urlpatterns = [
     path('manage/classes/', manage_classes, name='manage_classes'),
     path('manage/classes/edit/<int:class_id>/', edit_class, name='edit_class'),
     path('manage/classes/delete/<int:class_id>/', delete_class, name='delete_class'),
+    path('class/<int:class_id>/', class_detail, name='class_detail'),
     # Payments
     path('manage/payments/', manage_payments, name='manage_payments'),
     path('manage/payments/delete/<int:payment_id>/', delete_payment, name='delete_payment'),

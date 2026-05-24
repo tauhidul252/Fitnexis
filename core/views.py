@@ -219,6 +219,7 @@ def add_class(request):
         description = request.POST.get('description')
         schedule_time = request.POST.get('schedule_time')
         capacity = request.POST.get('capacity', 20)
+        duration_minutes = request.POST.get('duration_minutes', 60)
         image = request.FILES.get('image')
         
         GymClass.objects.create(
@@ -226,6 +227,7 @@ def add_class(request):
             description=description,
             schedule_time=schedule_time,
             capacity=capacity,
+            duration_minutes=duration_minutes,
             trainer=request.user,
             image=image
         )
@@ -646,6 +648,7 @@ def edit_class(request, class_id):
     if request.method == 'POST':
         gym_class.title = request.POST.get('title', gym_class.title)
         gym_class.description = request.POST.get('description', gym_class.description)
+        gym_class.duration_minutes = request.POST.get('duration_minutes', gym_class.duration_minutes)
         # Handle optional image upload
         image = request.FILES.get('image')
         if image:
@@ -676,6 +679,17 @@ def delete_class(request, class_id):
     gym_class.delete()
     messages.success(request, f"Class '{title}' has been removed from schedule.")
     return redirect('trainer_dashboard' if is_owner_trainer and not is_admin else 'manage_classes')
+
+
+def class_detail(request, class_id):
+    gym_class = GymClass.objects.get(id=class_id)
+    booking_count = gym_class.booking_set.count()
+    context = {
+        'gym_class': gym_class,
+        'booking_count': booking_count,
+        'spots_left': gym_class.capacity - booking_count,
+    }
+    return render(request, 'class_detail.html', context)
 
 
 def error_404(request, exception):

@@ -71,7 +71,7 @@
                                     </div>
                                     <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
                                         {% if class.trainer == request.user or request.user.profile.role == 'admin' %}
-                                        <button class="btn-small" onclick="openEditModal({{ class.id }}, '{{ class.title|escapejs }}', '{{ class.description|escapejs }}', '{{ class.schedule_time|date:"Y-m-d\\TH:i" }}', '{{ class.capacity }}')">Edit</button>
+                                        <button class="btn-small" onclick="openEditModal({{ class.id }}, '{{ class.title|escapejs }}', '{{ class.description|escapejs }}', '{{ class.schedule_time|date:"Y-m-d\\TH:i" }}', '{{ class.capacity }}', '{{ class.duration_minutes }}')">Edit</button>
                                         <a href="{% url 'delete_class' class.id %}" class="btn-small" style="background:#e74c3c; color:#fff;" onclick="return confirm('Delete this class?');">Delete</a>
                                         {% endif %}
                                     </div>
@@ -277,10 +277,14 @@
                 <input type="number" name="capacity" value="20" required>
             </div>
             <div class="form-group">
+                <label>Duration (minutes)</label>
+                <input type="number" name="duration_minutes" value="60" min="15" max="300" required placeholder="e.g. 60">
+            </div>
+            <div class="form-group">
                 <label>Image (optional)</label>
                 <input type="file" name="image" accept="image/*">
             </div>
-            <button type="submit" class="btn-primary">Create Class</button>
+            <button type="submit" class="btn-primary" style="margin-top:1rem;">&#128190; Save &amp; Create Class</button>
         </form>
     </div>
 </div>
@@ -309,10 +313,14 @@
                 <input id="edit_capacity" type="number" name="capacity" value="20" required>
             </div>
             <div class="form-group">
+                <label>Duration (minutes)</label>
+                <input id="edit_duration" type="number" name="duration_minutes" value="60" min="15" max="300" required>
+            </div>
+            <div class="form-group">
                 <label>Replace Image (optional)</label>
                 <input type="file" name="image" accept="image/*">
             </div>
-            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="submit" class="btn-primary" style="margin-top:1rem;">&#128190; Save Changes</button>
         </form>
     </div>
 </div>
@@ -791,7 +799,7 @@
     });
 
     // Open edit modal and populate fields
-    function openEditModal(id, title, description, scheduleTime, capacity) {
+    function openEditModal(id, title, description, scheduleTime, capacity, duration) {
         const modal = document.getElementById('editClassModal');
         const form = document.getElementById('editClassForm');
         form.action = '/manage/classes/edit/' + id + '/';
@@ -799,6 +807,7 @@
         document.getElementById('edit_description').value = description || '';
         document.getElementById('edit_schedule_time').value = scheduleTime || '';
         document.getElementById('edit_capacity').value = capacity || 20;
+        document.getElementById('edit_duration').value = duration || 60;
         modal.style.display = 'block';
     }
 </script>

@@ -59,12 +59,17 @@
             <img src="{% if class.image %}{{ class.image.url }}{% else %}{% static 'images/class_crossfit.png' %}{% endif %}" class="card-img" alt="{{ class.title }}">
             <div class="card-content">
                 <h3 class="highlight">{{ class.title|upper }}</h3>
-                <p>{{ class.trainer.username }}</p>
+                <div class="class-meta-row">
+                    <span class="class-duration-badge">&#9201; {{ class.duration_minutes }} min</span>
+                    <span class="class-trainer-badge">&#127947; {{ class.trainer.get_full_name|default:class.trainer.username|capfirst }}</span>
+                </div>
+                <p class="class-desc">{{ class.description|truncatewords:18|default:"Join this exciting fitness class and transform your body!" }}</p>
                 <div class="card-bottom-line"></div>
+                <a href="{% url 'class_detail' class.id %}" class="btn-details">Details &rarr;</a>
             </div>
         </div>
         {% empty %}
-        <p>No classes available at the moment.</p>
+        <p style="text-align:center; color: var(--text-muted); padding: 2rem;">No classes available at the moment.</p>
         {% endfor %}
     </div>
     <div class="pagination">
