@@ -12,7 +12,7 @@
             <!-- Image Panel -->
             <div class="class-detail-img-wrap">
                 {% if gym_class.image %}
-                    <img src="/static/images/" alt="{{ gym_class.title }}" class="class-detail-img">
+                    <img src="{{ gym_class.image.url }}" alt="{{ gym_class.title }}" class="class-detail-img">
                 {% else %}
                     <img src="{% static 'images/class_crossfit.png' %}" alt="{{ gym_class.title }}" class="class-detail-img">
                 {% endif %}
@@ -87,7 +87,7 @@
 <style>
     .class-detail-grid {
         display: grid;
-        grid-template-columns: 1fr 1.1fr;
+        grid-template-columns: 1.5fr 0.9fr;
         gap: 2.5rem;
         align-items: start;
         margin-top: 2rem;
@@ -100,9 +100,10 @@
     }
     .class-detail-img {
         width: 100%;
-        height: 420px;
-        object-fit: cover;
+        height: 600px;
+        object-fit: contain;
         display: block;
+        background: #000;
     }
     .class-detail-info {
         border-radius: 16px;
@@ -131,7 +132,7 @@
 
     @media (max-width: 768px) {
         .class-detail-grid { grid-template-columns: 1fr; }
-        .class-detail-img { height: 260px; }
+        .class-detail-img { height: 350px; }
     }
 </style>
 {% endblock %}

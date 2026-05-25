@@ -71,7 +71,7 @@
                                     </div>
                                     <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
                                         {% if class.trainer == request.user or request.user.profile.role == 'admin' %}
-                                        <button class="btn-small" onclick="openEditModal({{ class.id }}, '{{ class.title|escapejs }}', '{{ class.description|escapejs }}', '{{ class.schedule_time|date:"Y-m-d\\TH:i" }}', '{{ class.capacity }}', '{{ class.duration_minutes }}')">Edit</button>
+                                        <button class="btn-small" onclick="openEditModal({{ class.id }}, '{{ class.title|escapejs }}', '{{ class.description|escapejs }}', '{{ class.schedule_time|date:'Y-m-d' }}T{{ class.schedule_time|date:'H:i' }}', {{ class.capacity }}, {{ class.duration_minutes }}, '{% if class.image %}{{ class.image.url }}{% endif %}')">Edit</button>
                                         <a href="{% url 'delete_class' class.id %}" class="btn-small" style="background:#e74c3c; color:#fff;" onclick="return confirm('Delete this class?');">Delete</a>
                                         {% endif %}
                                     </div>
@@ -294,6 +294,9 @@
     <div class="modal-content">
         <span class="close" onclick="toggleModal('editClassModal')">&times;</span>
         <h3 class="text-white" style="margin-bottom: 1.5rem;"><i class="fas fa-edit text-accent me-2"></i>Edit Class</h3>
+        <div id="classImagePreview" style="margin-bottom: 1.5rem; text-align: center; display: none;">
+            <img id="previewImage" src="" alt="Class Image" style="width: 100%; max-width: 300px; height: 200px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(245, 176, 38, 0.3);">
+        </div>
         <form id="editClassForm" action="" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
@@ -801,7 +804,7 @@
     });
 
     // Open edit modal and populate fields
-    function openEditModal(id, title, description, scheduleTime, capacity, duration) {
+    function openEditModal(id, title, description, scheduleTime, capacity, duration, imageUrl) {
         const modal = document.getElementById('editClassModal');
         const form = document.getElementById('editClassForm');
         form.action = '/manage/classes/edit/' + id + '/';
@@ -810,6 +813,17 @@
         document.getElementById('edit_schedule_time').value = scheduleTime || '';
         document.getElementById('edit_capacity').value = capacity || 20;
         document.getElementById('edit_duration').value = duration || 60;
+        
+        // Display image if available
+        const imagePreview = document.getElementById('classImagePreview');
+        const previewImage = document.getElementById('previewImage');
+        if (imageUrl) {
+            previewImage.src = imageUrl;
+            imagePreview.style.display = 'block';
+        } else {
+            imagePreview.style.display = 'none';
+        }
+        
         modal.style.display = 'block';
     }
 </script>
