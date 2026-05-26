@@ -1,3 +1,6 @@
-Contact info has been pushed by feature. Please check and merge.
-Added save class button and image upload option in the class schedule.
-update cards in the class schedule. Please merge all of the code.
+# Fitnexis Gym Club
+
+## Latest Updates:
+* **Contact Info**: Integrated and merged contact info details.
+* **Class Schedule**: Added a "Save Class" button and enabled image uploads.
+* **Visual Cards**: Updated card designs within the class schedule.
