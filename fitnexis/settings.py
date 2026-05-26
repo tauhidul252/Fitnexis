@@ -79,6 +79,24 @@ DATABASES = {
     }
 }
 
+# ── MySQL config (uncomment after installing MySQL Server) ──────────────────
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'fitnexis_db',
+#         'USER': 'root',
+#         'PASSWORD': '',          # ← your MySQL root password
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+#         },
+#     }
+# }
+# After switching: run these two commands:
+#   python manage.py migrate
+#   python manage.py createsuperuser
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -85,6 +85,7 @@ class GymClass(models.Model):
     trainer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='classes_taught')
     schedule_time = models.DateTimeField()
     capacity = models.IntegerField(default=20)
+    duration_minutes = models.IntegerField(default=60, help_text="Duration of the class in minutes")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='classes/', blank=True, null=True)
 
