@@ -6,3 +6,5 @@
 * **Visual Cards**: Updated card designs within the class schedule.
 * **Booking**: Added book classes features (Frozen).
 
+## Contributors:
+* **Lopa-Jahan**: Contributed the footer, member info updates, modal booking updates, and the "Frozen" booking system features.
