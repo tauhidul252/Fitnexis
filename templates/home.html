@@ -213,7 +213,7 @@
 
     <div class="contact-main-grid">
         <div class="contact-form-box">
-            <form>
+            <form onsubmit="event.preventDefault(); alert('Message sent successfully!'); this.reset();">
                 <div class="form-row">
                     <input type="text" placeholder="NAME" required>
                     <input type="email" placeholder="EMAIL" required>

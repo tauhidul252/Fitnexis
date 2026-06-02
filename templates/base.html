@@ -51,48 +51,67 @@
     <main>
         {% block content %}{% endblock %}
     </main>
-    <footer>
-        <div class="footer-container">
-            <div class="footer-col brand-col">
-                <a href="{% url 'home' %}" style="text-decoration: none; display: block; margin-bottom: 1rem;">
-                    <h1 class="logo-text" style="color: white; margin-bottom:0;">FITNEXIS</h1>
-                    <p class="logo-subtext" style="color: var(--text-muted); margin-bottom: 0;">G Y M &nbsp;&nbsp; C L U B</p>
+    <footer style="background-color: #1e1e1e; padding: 4rem 2rem; margin-top: 4rem;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3rem;">
+            <!-- Left Column -->
+            <div style="flex: 1; min-width: 280px;">
+                <a href="{% url 'home' %}" style="text-decoration: none; display: block; margin-bottom: 0.5rem;">
+                    <h1 style="color: white; font-size: 2.8rem; font-weight: 900; letter-spacing: 1px; margin: 0; line-height: 1;">FITNEXIS</h1>
+                    <p style="color: #f5b026; margin: 0; font-weight: 800; letter-spacing: 8px; font-size: 0.8rem; padding-left: 2px;">G Y M &nbsp;C L U B</p>
                 </a>
-                <div class="social-icons">
-                    <span class="icon">IG</span>
-                    <span class="icon">FB</span>
-                    <span class="icon">TW</span>
+                <p style="color: #888; font-size: 0.95rem; margin-top: 1rem; margin-bottom: 2.5rem;">We are care about your health & body</p>
+                <div style="display: flex; gap: 1.2rem;">
+                    <a href="#" style="color: #888; font-size: 1.5rem; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'"><i class="fab fa-instagram"></i></a>
+                    <a href="#" style="color: #888; font-size: 1.5rem; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" style="color: #888; font-size: 1.5rem; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
-            <div class="footer-col">
-                <h3>About Us</h3>
-                <a href="#">Company Profile</a>
-                <a href="#">Our Management</a>
-                <a href="#">Privacy Policy</a>
-            </div>
-            <div class="footer-col">
-                <h3>Useful Links</h3>
-                <a href="#">Blogs</a>
-                <a href="#">Class Schedule</a>
-                <a href="#">Testimonial</a>
-                <a href="#">Payment Methods</a>
-            </div>
-            <div class="footer-col">
-                <h3>Support</h3>
-                <a href="#">Contact Us</a>
-                <a href="#">Support Center</a>
-                <a href="#">FAQ</a>
+            
+            <!-- Right Columns Section -->
+            <div style="display: flex; flex-direction: column; gap: 2.5rem; align-items: flex-start; /* Default align */">
+                <!-- Right Columns -->
+                <div style="display: flex; gap: 4rem; flex-wrap: wrap;">
+                <!-- Column 1 -->
+                <div>
+                    <h4 style="color: #f5b026; margin-bottom: 1.5rem; font-weight: 600; font-size: 1.1rem;">Features</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Core features</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Pro experience</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Integrations</a></li>
+                    </ul>
+                </div>
+                <!-- Column 2 -->
+                <div>
+                    <h4 style="color: #f5b026; margin-bottom: 1.5rem; font-weight: 600; font-size: 1.1rem;">Learn more</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Blog</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Case studies</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Customer stories</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Best practices</a></li>
+                    </ul>
+                </div>
+                <!-- Column 3 -->
+                <div>
+                    <h4 style="color: #f5b026; margin-bottom: 1.5rem; font-weight: 600; font-size: 1.1rem;">Support</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Contact</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Support</a></li>
+                        <li><a href="#" style="color: #bbb; text-decoration: none; font-size: 0.95rem; transition: color 0.3s;" onmouseover="this.style.color='#f5b026'" onmouseout="this.style.color='#bbb'">Legal</a></li>
+                    </ul>
+                </div>
+                </div>
+                
+                <!-- Newsletter Form -->
+                <div style="display: flex; width: 100%; max-width: 350px; align-self: flex-end;">
+                    <input type="email" placeholder="EMAIL HERE" style="flex: 1; padding: 0.8rem 1.2rem; border: none; outline: none; background: #fff; color: #333; font-weight: 600; font-family: 'Inter', sans-serif;">
+                    <button style="background: #f5b026; color: #000; border: none; padding: 0 1.5rem; font-weight: 800; cursor: pointer; transition: background 0.3s; font-family: 'Inter', sans-serif;" onmouseover="this.style.background='#e5a015'" onmouseout="this.style.background='#f5b026'">SEND</button>
+                </div>
             </div>
         </div>
-        <div class="footer-newsletter">
-            <form class="newsletter-form">
-                <input type="email" placeholder="EMAIL HERE">
-                <button type="submit" class="btn-primary">SEND</button>
-            </form>
+        <div style="text-align: center; border-top: 1px solid #333; margin-top: 4rem; padding-top: 2rem; color: #666; font-size: 0.9rem;">
+            &copy; All rights reserved | 2026 FITNEXIS GYM CLUB
         </div>
-        <div class="footer-bottom">
-            <p>&copy; All rights reserved | 2026</p>
-        </div>
+    </footer>
     <!-- Global Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="modal-global">
         <div class="modal-global-content">
