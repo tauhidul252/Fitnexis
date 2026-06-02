@@ -146,6 +146,18 @@ def update_progress(request):
     return redirect('member_dashboard')
 
 @login_required
+def cancel_booking(request, booking_id):
+    if request.method == 'POST':
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+            title = booking.gym_class.title
+            booking.delete()
+            messages.success(request, f"Successfully cancelled your booking for {title}.")
+        except Booking.DoesNotExist:
+            messages.error(request, "Booking not found.")
+    return redirect('member_dashboard')
+
+@login_required
 def trainer_dashboard(request):
     user = request.user
     if request.user.profile.role != 'trainer':
