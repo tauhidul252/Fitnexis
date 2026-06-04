@@ -8,3 +8,4 @@
 
 ## Contributors:
 * **Lopa-Jahan**: Contributed the footer, member info updates, modal booking updates, and the "Frozen" booking system features.
+* **Shimanto**: Contributed our blog section, about us section, and instructor section.
