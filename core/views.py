@@ -875,14 +875,23 @@ def add_trainer(request):
         email    = request.POST.get('email')
         password = request.POST.get('password')
         bio      = request.POST.get('bio', '')
+        specialty = request.POST.get('specialty', '')
+        profile_pic = request.FILES.get('profile_pic')
         if User.objects.filter(username=username).exists():
             messages.error(request, f"Username '{username}' already exists.")
         else:
             user = User.objects.create_user(username=username, email=email, password=password)
             user.profile.role = 'trainer'
             user.profile.bio  = bio
+            user.profile.specialty = specialty
+            if profile_pic:
+                user.profile.profile_pic = profile_pic
             user.profile.save()
             messages.success(request, f"Trainer '{username}' added successfully!")
+    # Redirect back to the referring page (home or manage_trainers)
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
     return redirect('manage_trainers')
 
 
@@ -897,9 +906,16 @@ def edit_trainer(request, trainer_id):
         trainer.last_name      = request.POST.get('last_name', trainer.last_name)
         trainer.profile.bio    = request.POST.get('bio', trainer.profile.bio)
         trainer.profile.phone  = request.POST.get('phone', trainer.profile.phone)
+        trainer.profile.specialty = request.POST.get('specialty', trainer.profile.specialty)
+        profile_pic = request.FILES.get('profile_pic')
+        if profile_pic:
+            trainer.profile.profile_pic = profile_pic
         trainer.save()
         trainer.profile.save()
         messages.success(request, f"Trainer '{trainer.username}' updated.")
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
     return redirect('manage_trainers')
 
 
@@ -911,6 +927,9 @@ def delete_trainer(request, trainer_id):
     uname = user.username
     user.delete()
     messages.success(request, f"Trainer '{uname}' deleted.")
+    next_url = request.GET.get('next', '')
+    if next_url:
+        return redirect(next_url)
     return redirect('manage_trainers')
 
 

@@ -13,6 +13,7 @@ class Profile(models.Model):
     phone = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
     bio = models.TextField(blank=True)
+    specialty = models.CharField(max_length=100, blank=True, default='', help_text="Trainer specialty, e.g. Cardio Trainer, Bodybuilding Trainer")
     profile_pic = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
     def __str__(self):
