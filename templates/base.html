@@ -15,15 +15,23 @@
             <h1 class="logo-text">FITNEXIS</h1>
             <p class="logo-subtext">G Y M &nbsp;&nbsp; C L U B</p>
         </a>
-        <ul class="nav-links">
-            <li><a href="{% url 'home' %}">HOME</a></li>
-            <li><a href="#about">ABOUT</a></li>
-            <li><a href="#classes">CLASSES</a></li>
-            <li><a href="#schedule">SCHEDULE</a></li>
-            <li><a href="#blogs">BLOG</a></li>
-            <li><a href="#contact">CONTACT</a></li>
+
+        <!-- Hamburger Button -->
+        <button class="hamburger" id="hamburger" aria-label="Open Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="{% url 'home' %}" onclick="closeMenu()">HOME</a></li>
+            <li><a href="#about" onclick="closeMenu()">ABOUT</a></li>
+            <li><a href="#classes" onclick="closeMenu()">CLASSES</a></li>
+            <li><a href="#schedule" onclick="closeMenu()">SCHEDULE</a></li>
+            <li><a href="#blogs" onclick="closeMenu()">BLOG</a></li>
+            <li><a href="#contact" onclick="closeMenu()">CONTACT</a></li>
         </ul>
-        <div class="nav-actions">
+        <div class="nav-actions" id="navActions">
             {% if user.is_authenticated %}
             <div class="user-profile-nav">
                 <a href="{% url 'dashboard' %}" class="profile-link-wrapper">
@@ -48,6 +56,7 @@
             {% endif %}
         </div>
     </nav>
+
     <main>
         {% block content %}{% endblock %}
     </main>
@@ -156,28 +165,88 @@
         .btn-danger:hover { background: #cc0000; }
     </style>
 
-    <script>
-        function showDeleteConfirm(url, message = "Are you sure you want to delete this item?") {
-            const modal = document.getElementById('deleteConfirmModal');
-            const confirmBtn = document.getElementById('deleteConfirmBtn');
-            const messageEl = document.getElementById('deleteConfirmMessage');
-            
-            messageEl.innerText = message;
-            confirmBtn.href = url;
-            modal.style.display = 'block';
-            return false; // Prevent default link action
+    <style>
+        /* ── Hamburger Button ── */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 1001;
         }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteConfirmModal').style.display = 'none';
+        .hamburger span {
+            display: block;
+            width: 26px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: all 0.3s ease;
         }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        window.onclick = function(event) {
-            const deleteModal = document.getElementById('deleteConfirmModal');
-            if (event.target == deleteModal) {
-                closeDeleteModal();
+        @media (max-width: 900px) {
+            .hamburger { display: flex; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: rgba(10,10,10,0.98);
+                padding: 1.5rem 2rem 2rem;
+                gap: 0;
+                z-index: 1000;
+                border-top: 1px solid #222;
             }
+            .nav-links.open { display: flex; }
+            .nav-links li { border-bottom: 1px solid #222; }
+            .nav-links li a { display: block; padding: 1rem 0; font-size: 1rem; }
+            .nav-actions {
+                display: none;
+                flex-direction: column;
+                align-items: flex-start;
+                position: fixed;
+                top: auto;
+                left: 0;
+                width: 100%;
+                background: rgba(10,10,10,0.98);
+                padding: 1rem 2rem 2rem;
+                z-index: 1000;
+            }
+            .nav-actions.open { display: flex; }
         }
+    </style>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        const navActions = document.getElementById('navActions');
+
+        hamburger.addEventListener('click', function() {
+            hamburger.classList.toggle('open');
+            navLinks.classList.toggle('open');
+            navActions.classList.toggle('open');
+        });
+
+        function closeMenu() {
+            hamburger.classList.remove('open');
+            navLinks.classList.remove('open');
+            navActions.classList.remove('open');
+        }
+
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!hamburger.contains(e.target) && !navLinks.contains(e.target) && !navActions.contains(e.target)) {
+                closeMenu();
+            }
+        });
     </script>
 </body>
 </html>
+
