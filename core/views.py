@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import Subscription, MembershipPlan, GymClass, Booking, Attendance, FitnessProgress, Payment, Offer
 import uuid
-import requests
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
